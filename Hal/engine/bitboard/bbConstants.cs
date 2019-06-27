@@ -6,16 +6,27 @@ using System.Threading.Tasks;
 
 namespace Hal.bitboard
 {
+    enum tipoPeca
+    {
+        PEAO = 0,
+        PP = 1,
+        CAVALO = 2,
+        CP = 3,
+        BISPO = 4,
+        BP =5,
+        TORRE = 6,
+        TP = 7,
+        RAINHA = 8,
+        RP = 9,
+        REI = 10,
+        KP = 11,
+        NENHUMA = 15
+    }
+
     static class bbConstants
     {
-        public const short PP = 0;
-        public const short PN = 2;
-        public const short PB = 4;
-        public const short PR = 6;
-        public const short PQ = 8;
-        public const short PK = 10;
-
-        public const short todosBBs = 12;
+        public const byte todosBBs = 16;
+        public const byte PECAS = 12;
         public const string sPecas = "PpNnBbRrQqKk";
 
 
@@ -56,7 +67,6 @@ namespace Hal.bitboard
         public const ulong I62 = C7 & R8;
         public const ulong I63 = C8 & R8;
 
-
-
+        
     }
 }

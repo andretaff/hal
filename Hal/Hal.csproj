@@ -44,8 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="engine\bitboard\bbConstants.cs" />
-    <Compile Include="engine\bitboard\blackMagic.cs" />
-    <Compile Include="engine\board\board.cs" />
+    <Compile Include="engine\bitboard\BlackMagic.cs" />
+    <Compile Include="engine\board\Board.cs" />
+    <Compile Include="engine\Game.cs" />
+    <Compile Include="engine\move\Move.cs" />
     <Compile Include="interface\fen.cs" />
     <Compile Include="Hal.cs" />
     <Compile Include="interface\uci.cs" />
@@ -55,8 +57,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="engine\move\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

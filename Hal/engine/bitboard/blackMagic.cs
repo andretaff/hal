@@ -9,7 +9,7 @@ namespace Hal.engine.bitboard
 {
 
 
-    class blackMagic
+    class BlackMagic
     {
         public struct magic
         {
@@ -19,36 +19,98 @@ namespace Hal.engine.bitboard
         }
 
         public ulong[] tabela;
+        public ulong[][] aPeao;
+        public ulong[] mCavalo;
+        public ulong[] mRei;
+
+        private void genCaps()
+        {
+            ulong pos;
+            int k;
+            aPeao = new ulong[2][];
+            mCavalo = new ulong[64];
+            mRei = new ulong[64];
+            aPeao[0] = new ulong[64];
+            aPeao[1] = new ulong[64];
+
+            for (k=0; k<64; k++)
+            {
+                pos = (ulong) Math.Pow(2, k);
+
+                mCavalo[k] = ((pos & (~bbConstants.R8) & (~(bbConstants.C1 | bbConstants.C2))) << 6);
+                mCavalo[k] = (pos & (~bbConstants.R8) & (~(bbConstants.C1 | bbConstants.C2))) << 6;
+                mCavalo[k] = mCavalo[k] | (pos & (~bbConstants.R8) & (~(bbConstants.C7 | bbConstants.C8))) << 10;
+                mCavalo[k] = mCavalo[k] | (pos & (~(bbConstants.R7 | bbConstants.R8)) & (~bbConstants.C8)) << 17;
+                mCavalo[k] = mCavalo[k] | (pos & (~(bbConstants.R7 | bbConstants.R8)) & (~bbConstants.C1)) << 15;
+                mCavalo[k] = mCavalo[k] | (pos & (~(bbConstants.R1 | bbConstants.R2)) & (~bbConstants.C8)) >> 15;
+                mCavalo[k] = mCavalo[k] | (pos & (~(bbConstants.R1 | bbConstants.R2)) & (~bbConstants.C1)) >> 17;
+                mCavalo[k] = mCavalo[k] | (pos & (~bbConstants.R1) & (~(bbConstants.C1 | bbConstants.C2))) >> 10;
+                mCavalo[k] = mCavalo[k] | (pos & (~bbConstants.R1) & (~(bbConstants.C7 | bbConstants.C8))) >> 6;
+
+
+
+                mRei[k] = (pos & (~bbConstants.R8)) << 8;
+                mRei[k] = mRei[k] | (pos & (~bbConstants.R1)) >> 8;
+                mRei[k] = mRei[k] | (pos & (~bbConstants.C1)) >> 1;
+                mRei[k] = mRei[k] | (pos & (~bbConstants.C8)) << 1;
+                mRei[k] = mRei[k] | (pos & (~(bbConstants.R8 | bbConstants.C1))) << 7;
+                mRei[k] = mRei[k] | (pos & (~(bbConstants.R8 | bbConstants.C8))) << 9;
+                mRei[k] = mRei[k] | (pos & (~(bbConstants.R1 | bbConstants.C1))) >> 9;
+                mRei[k] = mRei[k] | (pos & (~(bbConstants.R1 | bbConstants.C8))) >> 7;
+
+                aPeao[0][k] = (pos & (~bbConstants.C1)) >> 9;
+                aPeao[0][k] = aPeao[0][k] | (pos & (~bbConstants.C8)) >> 7;
+                aPeao[1][k] = (pos & (~bbConstants.C1)) << 7;
+                aPeao[1][k] = aPeao[1][k] | (pos & (~bbConstants.C8)) << 9;
+
+
+
+            }
+        }
 
         private ulong movsTorre(ulong pos, ulong occ)
         {
             ulong mascara = 0;
             ulong tPos = pos >> 1;
-            while (((tPos & ( bbConstants.C1 | occ)) != 0))
+            if ((pos & bbConstants.C1) == 0)
             {
-                mascara |= tPos;
-                tPos >>= 1;
+                while (((tPos & (bbConstants.C1 | occ)) == 0))
+                {
+                    mascara |= tPos;
+                    tPos >>= 1;
+                }
             }
 
-            tPos = pos >> 1;
-            while (((tPos & (bbConstants.R1 | occ)) != 0))
+            if ((pos & bbConstants.R1) == 0)
             {
-                mascara |= tPos;
-                tPos >>= 1;
+                tPos = pos >> 8;
+                while (((tPos & (bbConstants.R1 | occ)) == 0))
+                {
+                    mascara |= tPos;
+                    tPos >>= 8;
+                }
             }
 
-            tPos = pos << 8;
-            while (((tPos & (bbConstants.R8 | occ)) != 0))
+            if ((pos & bbConstants.R8) == 0)
             {
-                mascara |= tPos;
-                tPos <<= 8;
+
+                tPos = pos << 8;
+                while (((tPos & (bbConstants.R8 | occ)) == 0))
+                {
+                    mascara |= tPos;
+                    tPos <<= 8;
+                }
             }
 
-            tPos = pos << 1;
-            while (((tPos & (bbConstants.C8 | occ)) != 0))
+            if ((pos & bbConstants.C8) == 0)
             {
-                mascara |= tPos;
-                tPos <<= 1;
+
+                tPos = pos << 1;
+                while (((tPos & (bbConstants.C8 | occ)) == 0))
+                {
+                    mascara |= tPos;
+                    tPos <<= 1;
+                }
             }
 
             return mascara;
@@ -60,38 +122,52 @@ namespace Hal.engine.bitboard
         {
             ulong mascara = 0;
             ulong tPos = pos >> 9;
-            while (((tPos & (bbConstants.R1 | bbConstants.C1 | occ)) != 0))
+            if ((pos & (bbConstants.R1 | bbConstants.C1)) == 0)
+                while (((tPos & (bbConstants.R1 | bbConstants.C1 | occ)) == 0))
+                {
+                    mascara |= tPos;
+                    tPos >>= 9;
+                }
+
+            if ((pos & (bbConstants.R1 | bbConstants.C8)) == 0)
             {
-                mascara |= tPos;
-                tPos >>= 9;
+                tPos = pos >> 7;
+                while (((tPos & (bbConstants.R1 | bbConstants.C8 | occ)) == 0))
+                {
+                    mascara |= tPos;
+                    tPos >>= 7;
+                }
             }
 
-            tPos = pos >> 7;
-            while (((tPos & (bbConstants.R1 | bbConstants.C8 | occ)) != 0))
+            if ((pos & (bbConstants.R8 | bbConstants.C8)) == 0)
             {
-                mascara |= tPos;
-                tPos >>= 7;
+                tPos = pos << 9;
+                while (((tPos & (bbConstants.R8 | bbConstants.C8 | occ)) == 0))
+                {
+                    mascara |= tPos;
+                    tPos <<= 9;
+                }
             }
 
-            tPos = pos << 9;
-            while (((tPos & (bbConstants.R8 | bbConstants.C8 |occ)) != 0))
+            if ((pos & (bbConstants.R8 | bbConstants.C1)) == 0)
             {
-                mascara |= tPos;
-                tPos <<= 9;
+                tPos = pos << 7;
+                while (((tPos & (bbConstants.R8 | bbConstants.C1 | occ)) == 0))
+                {
+                    mascara |= tPos;
+                    tPos <<= 7;
+                }
             }
-
-            tPos = pos << 7;
-            while (((tPos & (bbConstants.R8 | bbConstants.C1 | occ)) != 0))
-            {
-                mascara |= tPos;
-                tPos <<= 7;
-            }
-
             return mascara;
 
         }
 
-        public void iniciar()
+        public ulong getBBIndex(int indice)
+        {
+            return (ulong) Math.Pow(2, indice);
+        }
+
+        private void iniciar()
         {
             int i;
             ulong pos;
@@ -99,6 +175,8 @@ namespace Hal.engine.bitboard
             ulong ataques;
             ulong oc;
             ulong posicao;
+
+            this.genCaps();
 
             this.tabela = new ulong[88508];
 
@@ -144,53 +222,44 @@ namespace Hal.engine.bitboard
             }
         }
 
+        public int index(ulong bitboard)
+        {
+            uint fold;
+
+            bitboard = bitboard ^ (bitboard - 1);
+            fold = (uint) (bitboard ^ (bitboard >> 32));
+            fold = ((fold * 0x78291ACF) >> 26);
+            return lsb_64_table[fold];
+        }
         private void gerarOcupacoes(ulong mascaraPrincipal, ref ulong mascaraAtual)
         {
-            ushort[] bits;
-            ushort[] atual;
-
             ulong posicao;
-            int i;
-            
-            bits = new ushort[64];
-            atual = new ushort[64];
+            int i,j;
+            bool achou = false;
 
+            ulong atual = 0;
+
+            posicao = 1;
+            ulong zerar = 0;
             for (i = 0; i<64; i++)
             {
-                posicao = (ulong) Math.Pow(2, i);
-                if ((posicao & mascaraPrincipal) == 0)
-                    bits[i] = 0;
-                else
-                    bits[i] = 1;
-
-                if ((posicao & mascaraAtual) == 0)
-                    atual[i] = 0;
-                else
-                    atual[i] = 1;
-
-            }
-
-            for (i = 0; i<64; i++)
-            {
-                if ((atual[i]==0) && (bits[i]==1))
+                if (((posicao & mascaraAtual) == 0) && ((posicao & mascaraPrincipal) != 0))
                 {
-                    atual[i] = 1;
-                    for (j=0; j<i; j++)
-                    {
-                        atual[i] = 0;
-                    }
-                    break;
+                    atual = 0;
+                    atual |= posicao;
+                    atual = atual | ((~zerar & mascaraAtual));
+                    mascaraAtual = atual;
+                    return;
                 }
+
+
+                posicao <<= 1;
+                zerar |= posicao;
             }
-            if (i == 64)
-                mascaraAtual = 0;
-            else
-            {
-                mascaraAtual = 0;
-                for (i = 0; i < 64; i++)
-                    mascaraAtual |= (ulong)Math.Pow(2, i) * atual[i];
-            }
+
+            mascaraAtual = 0;
         }
+        private readonly int[] lsb_64_table = { 63, 30, 3, 32, 59, 14, 11, 33, 60, 24, 50, 9, 55, 19, 21, 34, 61, 29, 2, 53, 51, 23, 41, 18, 56, 28, 1, 43, 46, 27, 0, 35, 62, 31, 58, 4, 5, 49, 54, 6, 15, 52, 12, 40, 7, 42, 45, 16, 25, 57, 48, 13, 10, 39, 8, 44, 20, 47, 38, 22, 17, 37, 36, 26 };
 
         public magic[] bispo =          {   new magic      { fator = 0x107ac08050500bff, posicao = 66157 },
                                             new magic      { fator = 0x7fffdfdfd823fffd, posicao = 71730 },
@@ -323,5 +392,10 @@ namespace Hal.engine.bitboard
 	                                        new magic      { fator = 0xee73fffbffbb77fe, posicao =  8555 },
 	                                        new magic      { fator = 0x0002000308482882, posicao =  1009 }
                                         };
+
+        public BlackMagic()
+        {
+            this.iniciar();
+        }
     }
 }
