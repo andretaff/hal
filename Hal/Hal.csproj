@@ -43,14 +43,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="engine\avaliacao\Avaliador.cs" />
+    <Compile Include="engine\avaliacao\DNA.cs" />
     <Compile Include="engine\bitboard\bbConstants.cs" />
     <Compile Include="engine\bitboard\BlackMagic.cs" />
     <Compile Include="engine\board\Board.cs" />
-    <Compile Include="engine\Game.cs" />
+    <Compile Include="Game\Game.cs" />
     <Compile Include="engine\move\Move.cs" />
+    <Compile Include="engine\negamax\NegaMax.cs" />
+    <Compile Include="engine\negamax\NegaThread.cs" />
+    <Compile Include="Game\TimeControl.cs" />
     <Compile Include="interface\fen.cs" />
     <Compile Include="Hal.cs" />
-    <Compile Include="interface\uci.cs" />
+    <Compile Include="interface\Uci.cs" />
     <Compile Include="main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

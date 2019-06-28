@@ -1,37 +1,222 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using Hal.bitboard;
 using Hal.engine.bitboard;
 using Hal.engine.move;
+using Hal.engine.avaliacao;
+
 
 namespace Hal.engine.board
 {
+    public static class ExtensionMethods
+    {
+        // Deep clone
+        public static T DeepClone<T>(this T a)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(stream, a);
+                stream.Position = 0;
+                return (T)formatter.Deserialize(stream);
+            }
+        }
+    }
+
+    [Serializable]
     class Board
     {
         private ulong[] bbs;
-        private byte corMover;
+        public byte corMover;
         private BlackMagic bm;
+        private DNA dna = DNA.Instance;
+        public int[] vMat;
+
 
         public Board(BlackMagic bm)
         {
             bbs = new ulong[bbConstants.todosBBs];
             this.bm = bm;
             this.corMover = 0;
+            vMat = new int[2];
         }
 
-        public void addPeca(ulong posicao, tipoPeca peca)
+        public void addPeca(ulong posicao, tipoPeca peca, int index)
         {
+            int cor = (int)peca % 2;
             this.bbs[(int)peca] ^= posicao;
-            this.bbs[(int)peca % 2 + bbConstants.PECAS] ^= posicao;
+            this.bbs[cor + bbConstants.PECAS] ^= posicao;
+            vMat[cor] += dna.vPecas[(int)peca];
+
         }
 
-        public void removePeca(ulong posicao, tipoPeca peca)
+        public void removePeca(ulong posicao, tipoPeca peca, int index)
         {
+            nt cor = (int)peca % 2;
             this.bbs[(int)peca] ^= posicao;
-            this.bbs[(int)peca % 2 + bbConstants.PECAS] ^= posicao;
+            this.bbs[cor + bbConstants.PECAS] ^= posicao;
+            vMat[cor] -= dna.vPecas[(int)peca];
+        }
+
+
+        public void makeMove(Move move)
+        {
+            switch (move.tipo)
+            {
+                case tipoMovimento.MNORMAL:
+                    {
+                        this.removePeca(move.bbFrom, move.peca, move.indiceDe);
+                        this.addPeca(move.bbTo, move.peca, move.indicePara);
+                    } break;
+                case tipoMovimento.MDUPLO:
+                    {
+                        this.removePeca(move.bbFrom, move.peca, move.indiceDe);
+                        this.addPeca(move.bbTo, move.peca, move.indicePara);
+                    } break;
+                case tipoMovimento.MROQUEK:
+                    {
+                        int cor = (int)move.peca % 2;
+                        if (cor == 0)
+                        {
+                            removePeca(bbConstants.I60, tipoPeca.REI, 60);
+                            removePeca(bbConstants.I63, tipoPeca.TORRE, 63);
+                            addPeca(bbConstants.I63, tipoPeca.REI, 63);
+                            addPeca(bbConstants.I62, tipoPeca.TORRE, 62);
+                        }
+                        else
+                        {
+                            removePeca(bbConstants.I04, tipoPeca.RP, 4);
+                            removePeca(bbConstants.I07, tipoPeca.TP, 7);
+                            addPeca(bbConstants.I07, tipoPeca.RP, 7);
+                            addPeca(bbConstants.I06, tipoPeca.TP, 6);
+                         }
+                    } break;
+
+                case tipoMovimento.MROQUEQ:
+                    {
+                        int cor = (int)move.peca % 2;
+                        if (cor == 0)
+                        {
+                            removePeca(bbConstants.I60, tipoPeca.REI, 60);
+                            removePeca(bbConstants.I56, tipoPeca.TORRE, 56);
+                            addPeca(bbConstants.I56, tipoPeca.REI, 56);
+                            addPeca(bbConstants.I57, tipoPeca.TORRE, 57);
+                        }
+                        else
+                        {
+                            removePeca(bbConstants.I04, tipoPeca.RP, 4);
+                            removePeca(bbConstants.I00, tipoPeca.TP, 0);
+                            addPeca(bbConstants.I00, tipoPeca.RP, 0);
+                            addPeca(bbConstants.I01, tipoPeca.TP, 1);
+                        }
+                    }
+                    break;
+                default:
+                    {
+                        if ((int) move.tipo> (int) tipoMovimento.MPROMOCAP)
+                        {
+                            tipoPeca promo = (tipoPeca)((int)move.tipo - (int)tipoMovimento.MPROMOCAP);
+                            removePeca(move.bbFrom, move.peca, move.indiceDe);
+                            removePeca(move.bbTo, move.pecaCap, move.indicePara);
+                            addPeca(move.bbTo, promo, move.indicePara);
+                        }
+                        else
+                        {
+                            tipoPeca promo = (tipoPeca)((int)move.tipo - (int)tipoMovimento.MPROMO);
+                            removePeca(move.bbFrom, move.peca, move.indiceDe);
+                            addPeca(move.bbTo, promo, move.indicePara);
+                        }
+
+                    } break;
+
+            }
+        }
+
+        public void unmakeMove(Move move)
+        {
+            switch (move.tipo){
+                case tipoMovimento.MNORMAL:
+                    {
+                        this.addPeca(move.bbFrom, move.peca, move.indiceDe);
+                        this.removePeca(move.bbTo, move.peca, move.indicePara);
+                    } break;
+                case tipoMovimento.MDUPLO:
+                    {
+                        this.addPeca(move.bbFrom, move.peca, move.indiceDe);
+                        this.removePeca(move.bbTo, move.peca, move.indicePara);
+                    } break;
+                case tipoMovimento.MCAP:
+                    {
+                        this.addPeca(move.bbFrom, move.peca, move.indiceDe);
+                        this.addPeca(move.bbTo, move.pecaCap, move.indicePara);
+                        this.removePeca(move.bbTo, move.peca, move.indicePara);
+                    }
+                    break;
+                case tipoMovimento.MROQUEK:
+                    {
+                        int cor = (int)move.peca % 2;
+                        if (cor == 0)
+                        {
+                            addPeca(bbConstants.I60, tipoPeca.REI, 60);
+                            addPeca(bbConstants.I63, tipoPeca.TORRE, 63);
+                            removePeca(bbConstants.I63, tipoPeca.REI, 63);
+                            removePeca(bbConstants.I62, tipoPeca.TORRE, 62);
+                        }
+                        else
+                        {
+                            addPeca(bbConstants.I04, tipoPeca.RP, 4);
+                            addPeca(bbConstants.I07, tipoPeca.TP, 7);
+                            removePeca(bbConstants.I07, tipoPeca.RP, 7);
+                            removePeca(bbConstants.I06, tipoPeca.TP, 6);
+                        }
+                    }
+                    break;
+
+                case tipoMovimento.MROQUEQ:
+                    {
+                        int cor = (int)move.peca % 2;
+                        if (cor == 0)
+                        {
+                            addPeca(bbConstants.I60, tipoPeca.REI, 60);
+                            addPeca(bbConstants.I56, tipoPeca.TORRE, 56);
+                            removePeca(bbConstants.I56, tipoPeca.REI, 56);
+                            removePeca(bbConstants.I57, tipoPeca.TORRE, 57);
+                        }
+                        else
+                        {
+                            removePeca(bbConstants.I04, tipoPeca.RP, 4);
+                            removePeca(bbConstants.I00, tipoPeca.TP, 0);
+                            addPeca(bbConstants.I00, tipoPeca.RP, 0);
+                            addPeca(bbConstants.I01, tipoPeca.TP, 1);
+                        }
+                    }
+                    break;
+                default:
+                    {
+                        if ((int)move.tipo > (int)tipoMovimento.MPROMOCAP)
+                        {
+                            tipoPeca promo = (tipoPeca)((int)move.tipo - (int)tipoMovimento.MPROMOCAP);
+                            addPeca(move.bbFrom, move.peca, move.indiceDe);
+                            addPeca(move.bbTo, move.pecaCap, move.indicePara);
+                            removePeca(move.bbTo, promo, move.indicePara);
+                        }
+                        else
+                        {
+                            tipoPeca promo = (tipoPeca)((int)move.tipo - (int)tipoMovimento.MPROMO);
+                            addPeca(move.bbFrom, move.peca, move.indiceDe);
+                            removePeca(move.bbTo, promo, move.indicePara);
+                        }
+
+                    }
+                    break;
+
+            }
+
         }
 
 
