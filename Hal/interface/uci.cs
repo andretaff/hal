@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Hal.Interface
 {
-    class uci
+    class Uci
     {
         private static readonly object _objectIn = new object();
         private static readonly object _objectOut = new object();

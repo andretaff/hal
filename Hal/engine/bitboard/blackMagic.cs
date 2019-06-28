@@ -68,7 +68,7 @@ namespace Hal.engine.bitboard
             }
         }
 
-        private ulong movsTorre(ulong pos, ulong occ)
+        private ulong movsTorre(ulong pos, ulong occ, bool ataques)
         {
             ulong mascara = 0;
             ulong tPos = pos >> 1;
@@ -79,6 +79,10 @@ namespace Hal.engine.bitboard
                     mascara |= tPos;
                     tPos >>= 1;
                 }
+                if (ataques)
+                {
+                    mascara |= tPos;
+                }
             }
 
             if ((pos & bbConstants.R1) == 0)
@@ -88,6 +92,10 @@ namespace Hal.engine.bitboard
                 {
                     mascara |= tPos;
                     tPos >>= 8;
+                }
+                if (ataques)
+                {
+                    mascara |= tPos;
                 }
             }
 
@@ -100,6 +108,10 @@ namespace Hal.engine.bitboard
                     mascara |= tPos;
                     tPos <<= 8;
                 }
+                if (ataques)
+                {
+                    mascara |= tPos;
+                }
             }
 
             if ((pos & bbConstants.C8) == 0)
@@ -111,6 +123,10 @@ namespace Hal.engine.bitboard
                     mascara |= tPos;
                     tPos <<= 1;
                 }
+                if (ataques)
+                {
+                    mascara |= tPos;
+                }
             }
 
             return mascara;
@@ -118,16 +134,23 @@ namespace Hal.engine.bitboard
 
         }
 
-        private ulong movsBipo(ulong pos, ulong occ)
+        private ulong movsBipo(ulong pos, ulong occ, bool ataques)
         {
             ulong mascara = 0;
             ulong tPos = pos >> 9;
+
             if ((pos & (bbConstants.R1 | bbConstants.C1)) == 0)
+            {
                 while (((tPos & (bbConstants.R1 | bbConstants.C1 | occ)) == 0))
                 {
                     mascara |= tPos;
                     tPos >>= 9;
                 }
+                if (ataques)
+                {
+                    mascara |= tPos;
+                }
+            }
 
             if ((pos & (bbConstants.R1 | bbConstants.C8)) == 0)
             {
@@ -136,6 +159,10 @@ namespace Hal.engine.bitboard
                 {
                     mascara |= tPos;
                     tPos >>= 7;
+                }
+                if (ataques)
+                {
+                    mascara |= tPos;
                 }
             }
 
@@ -147,6 +174,10 @@ namespace Hal.engine.bitboard
                     mascara |= tPos;
                     tPos <<= 9;
                 }
+                if (ataques)
+                {
+                    mascara |= tPos;
+                }
             }
 
             if ((pos & (bbConstants.R8 | bbConstants.C1)) == 0)
@@ -156,6 +187,10 @@ namespace Hal.engine.bitboard
                 {
                     mascara |= tPos;
                     tPos <<= 7;
+                }
+                if (ataques)
+                {
+                    mascara |= tPos;
                 }
             }
             return mascara;
@@ -183,13 +218,13 @@ namespace Hal.engine.bitboard
             for (i = 0; i < 64; i++)
             {
                 pos = (ulong)Math.Pow(2, i);
-                mascara = this.movsBipo(pos, 0);
+                mascara = this.movsBipo(pos, 0,false);
                 bispo[i].mascara = ~mascara;
                 oc = 0;
                 do
                 {
                     this.gerarOcupacoes(mascara, ref oc);
-                    ataques = this.movsBipo(pos, oc);
+                    ataques = this.movsBipo(pos, oc,true);
 
                     posicao = this.bispo[i].mascara | oc;
                     posicao *= this.bispo[i].fator;
@@ -201,13 +236,13 @@ namespace Hal.engine.bitboard
                 } while (oc != 0);
 
 
-                mascara = this.movsTorre(pos, 0);
+                mascara = this.movsTorre(pos, 0,false);
                 torre[i].mascara = ~mascara;
                 oc = 0;
                 do
                 {
                     this.gerarOcupacoes(mascara, ref oc);
-                    ataques = this.movsTorre(pos, oc);
+                    ataques = this.movsTorre(pos, oc,true);
 
                     posicao = this.torre[i].mascara | oc;
                     posicao *= this.torre[i].fator;

@@ -8,9 +8,10 @@ using Hal.bitboard;
 namespace Hal.engine.move
 {
     enum tipoMovimento { MNORMAL = 0,
-        MCAP = 1,
-        MROQUEQ = 2,
-        MROQUEK = 3,
+        MDUPLO = 1,
+        MCAP = 2,
+        MROQUEQ = 3,
+        MROQUEK = 4,
         MPROMO = 10,
         MPROMON = 11,
         MPROMOB = 12,
