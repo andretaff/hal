@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Hal.bitboard;
+using Hal.engine.bitboard;
 
 namespace Hal.engine.bitboard
 {
@@ -269,9 +269,7 @@ namespace Hal.engine.bitboard
         private void gerarOcupacoes(ulong mascaraPrincipal, ref ulong mascaraAtual)
         {
             ulong posicao;
-            int i,j;
-            bool achou = false;
-
+            int i;
             ulong atual = 0;
 
             posicao = 1;

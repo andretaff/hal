@@ -6,18 +6,19 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace Hal.Game
+namespace Hal.game
 {
     enum tipoTempo { infinito, milisecsPerMove };
     class TimeControl
     {
         private tipoTempo tipo;
         private ulong miliSecsMax;
+        private DateTime startTime;
         private bool stop;
 
         public void Run()
         {
-            DateTime startTime, endTime;
+            DateTime endTime;
             startTime = DateTime.Now;
 
             if (tipo == tipoTempo.infinito)
@@ -30,12 +31,17 @@ namespace Hal.Game
             else if (tipo == tipoTempo.milisecsPerMove)
             {
                 endTime = DateTime.Now;
-                while ((!stop) && (((TimeSpan)(endTime - startTime)).TotalMilliseconds<miliSecsMax))
+                while ((!stop) && (((TimeSpan)(endTime - startTime)).TotalMilliseconds<miliSecsMax-300))
                 {
                     Thread.Sleep(10);
                     endTime = DateTime.Now;
                 }
             }
+        }
+
+        public ulong ellapsedTime()
+        {
+            return (ulong) ((TimeSpan)(DateTime.Now - startTime)).TotalMilliseconds;
         }
 
         public void parar()

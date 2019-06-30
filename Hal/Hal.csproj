@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -31,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -48,14 +50,16 @@
     <Compile Include="engine\bitboard\bbConstants.cs" />
     <Compile Include="engine\bitboard\BlackMagic.cs" />
     <Compile Include="engine\board\Board.cs" />
-    <Compile Include="Game\Game.cs" />
+    <Compile Include="engine\ThreadQueue.cs" />
+    <Compile Include="game\Game.cs" />
     <Compile Include="engine\move\Move.cs" />
     <Compile Include="engine\negamax\NegaMax.cs" />
     <Compile Include="engine\negamax\NegaThread.cs" />
-    <Compile Include="Game\TimeControl.cs" />
-    <Compile Include="interface\fen.cs" />
+    <Compile Include="game\GConstants.cs" />
+    <Compile Include="game\TimeControl.cs" />
+    <Compile Include="userInterface\fen.cs" />
     <Compile Include="Hal.cs" />
-    <Compile Include="interface\Uci.cs" />
+    <Compile Include="userInterface\Uci.cs" />
     <Compile Include="main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

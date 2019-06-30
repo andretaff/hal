@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Hal.bitboard
+namespace Hal.engine.bitboard
 {
     enum tipoPeca
     {
@@ -28,6 +28,11 @@ namespace Hal.bitboard
         public const byte todosBBs = 16;
         public const byte PECAS = 12;
         public const string sPecas = "PpNnBbRrQqKk";
+
+        public const uint ROQUE_REI_BRANCO      = 1;    //01b
+        public const uint ROQUE_RAINHA_BRANCO   = 2; //10b
+        public const uint ROQUE_REI_PRETO = 4;
+        public const uint ROQUE_RAINHA_PRETO = 8;
 
 
         public const ulong R1 = 0x00000000000000FF;

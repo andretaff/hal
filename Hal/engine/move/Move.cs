@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Hal.bitboard;
+using Hal.engine.bitboard;
 
 namespace Hal.engine.move
 {
@@ -33,6 +33,8 @@ namespace Hal.engine.move
         public tipoMovimento tipo;
         public int indiceDe;
         public int indicePara;
+        public uint potencialRoque;
+        public ulong enPassant;
 
         public Move(ulong bbFrom, ulong bbTo, tipoMovimento tipo, tipoPeca peca, tipoPeca pecaCap, int indiceDe, int indicePara )
         {
@@ -43,44 +45,52 @@ namespace Hal.engine.move
             this.indiceDe = indiceDe;
             this.indicePara = indicePara;
             this.tipo = tipo;
+            this.enPassant = 0;
+            this.potencialRoque = 0;
+        }
+
+        public void print()
+        {
+            string saida = bbConstants.sPecas[(int)this.peca]+ this.toAlgebra();
+            Console.Out.WriteLine(saida);
         }
 
         private string bbToString(ulong bb)
         {
             string s = "";
-            if ((bb & bbConstants.R1) != 0)
-                s = "a";
-            else if ((bb & bbConstants.R2) != 0)
-                s = "b";
-            else if ((bb & bbConstants.R3) != 0)
-                s = "c";
-            else if ((bb & bbConstants.R4) != 0)
-                s = "d";
-            else if ((bb & bbConstants.R5) != 0)
-                s = "e";
-            else if ((bb & bbConstants.R6) != 0)
-                s = "f";
-            else if ((bb & bbConstants.R7) != 0)
-                s = "g";
-            else if ((bb & bbConstants.R8) != 0)
-                s = "h";
-
             if ((bb & bbConstants.C1) != 0)
-                s = s+"1";
+                s = s + "a";
             else if ((bb & bbConstants.C2) != 0)
-                s = s + "2";
+                s = s + "b";
             else if ((bb & bbConstants.C3) != 0)
-                s = s + "3";
+                s = s + "c";
             else if ((bb & bbConstants.C4) != 0)
-                s = s + "4";
+                s = s + "d";
             else if ((bb & bbConstants.C5) != 0)
-                s = s + "5";
+                s = s + "e";
             else if ((bb & bbConstants.C6) != 0)
-                s = s + "6";
+                s = s + "f";
             else if ((bb & bbConstants.C7) != 0)
-                s = s + "7";
+                s = s + "g";
             else if ((bb & bbConstants.C8) != 0)
-                s = s + "8";
+                s = s + "h";
+
+            if ((bb & bbConstants.R1) != 0)
+                s += "8";
+            else if ((bb & bbConstants.R2) != 0)
+                s += "7";
+            else if ((bb & bbConstants.R3) != 0)
+                s += "6";
+            else if ((bb & bbConstants.R4) != 0)
+                s += "5";
+            else if ((bb & bbConstants.R5) != 0)
+                s += "4";
+            else if ((bb & bbConstants.R6) != 0)
+                s += "3";
+            else if ((bb & bbConstants.R7) != 0)
+                s += "2";
+            else if ((bb & bbConstants.R8) != 0)
+                s += "1";
 
             return s;
         }
@@ -105,7 +115,30 @@ namespace Hal.engine.move
                     s = s + bbConstants.sPecas[(int)peca];
                 }
             }
-            //else
+            else
+            {
+                if (tipo == tipoMovimento.MROQUEK){
+                    if ((int) peca % 2 == 0 )
+                    {
+                        s = "e1h1";
+                    }
+                    else
+                    {
+                        s = "e8h8";
+                    }
+                }
+                else
+                {
+                    if ((int)peca % 2 == 0)
+                    {
+                        s = "e1a1";
+                    }
+                    else
+                    {
+                        s = "e8a8";
+                    }
+                }
+            }
             return s;
 
         }

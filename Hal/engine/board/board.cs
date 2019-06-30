@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
-using Hal.bitboard;
 using Hal.engine.bitboard;
 using Hal.engine.move;
 using Hal.engine.avaliacao;
@@ -13,29 +12,15 @@ using Hal.engine.avaliacao;
 
 namespace Hal.engine.board
 {
-    public static class ExtensionMethods
-    {
-        // Deep clone
-        public static T DeepClone<T>(this T a)
-        {
-            using (MemoryStream stream = new MemoryStream())
-            {
-                BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(stream, a);
-                stream.Position = 0;
-                return (T)formatter.Deserialize(stream);
-            }
-        }
-    }
-
-    [Serializable]
     class Board
     {
         private ulong[] bbs;
-        public byte corMover;
+        public int corMover;
         private BlackMagic bm;
         private DNA dna = DNA.Instance;
         public int[] vMat;
+        public uint potencialRoque = 0;
+        public ulong enPassant = 0;
 
 
         public Board(BlackMagic bm)
@@ -44,6 +29,22 @@ namespace Hal.engine.board
             this.bm = bm;
             this.corMover = 0;
             vMat = new int[2];
+        }
+
+        public Board clone()
+        {
+            Board board = new Board(bm);
+            board.corMover = corMover;
+            board.potencialRoque = potencialRoque;
+            board.enPassant = enPassant;
+            board.vMat[0] = vMat[0];
+            board.vMat[1] = vMat[1];
+            int i;
+            for (i=0; i<bbConstants.todosBBs; i++)
+            {
+                board.bbs[i] = bbs[i];
+            }
+            return board;
         }
 
         public void addPeca(ulong posicao, tipoPeca peca, int index)
@@ -57,15 +58,121 @@ namespace Hal.engine.board
 
         public void removePeca(ulong posicao, tipoPeca peca, int index)
         {
-            nt cor = (int)peca % 2;
+            int cor = (int)peca % 2;
             this.bbs[(int)peca] ^= posicao;
             this.bbs[cor + bbConstants.PECAS] ^= posicao;
             vMat[cor] -= dna.vPecas[(int)peca];
         }
 
+        public void print()
+        {
+            ulong posicao = 1;
+            int index = 0;
+            string linha="";
+            do
+            {
+                int i;
+                for (i = 0; i < bbConstants.PECAS; i++)
+                    if ((bbs[i] & posicao) != 0)
+                    {
+                        linha += bbConstants.sPecas[i];
+                        break;
+                    }
+                if (i == bbConstants.PECAS)
+                    linha += " ";
+
+                if ((index+1) % 8 == 0)
+                {
+                    Console.Out.WriteLine(linha);
+                    linha = "";
+                }
+                index++;
+                posicao <<= 1;
+            } while (index < 64);
+        }
+
+        public void addPecaHumana(tipoPeca peca, int index)
+        {
+            ulong posicao = (ulong)Math.Pow(2, index);
+            this.addPeca(posicao, peca, index);
+        }
+
+        public bool casaAtacada(ulong bb,int corAtacante)
+        {
+            ulong atacantes = bbs[bbConstants.PECAS + corAtacante];
+            uint index;
+            ulong todas = bbs[bbConstants.PECAS] | bbs[bbConstants.PECAS + 1];
+            int iFrom;
+            ulong occ;
+
+            iFrom = bm.index(bb);
+
+            if ((bm.aPeao[corAtacante][iFrom] & bbs[(int)tipoPeca.PEAO + corAtacante]) != 0)
+                return true;
+
+            if ((bm.mRei[iFrom] & bbs[(int)tipoPeca.REI + corAtacante]) != 0)
+                return true;
+
+            if ((bm.mCavalo[iFrom] & bbs[(int)tipoPeca.PEAO + corAtacante]) != 0)
+                return true;
+
+            index = bm.torre[iFrom].posicao;
+            occ = bm.torre[iFrom].mascara | todas;
+            occ *= bm.torre[iFrom].fator;
+            occ >>= (64 - 12);
+            index = index + (uint)occ;
+
+            if ((bm.tabela[index] & (bbs[(int)tipoPeca.TORRE+corAtacante]| bbs[(int)tipoPeca.RAINHA + corAtacante]))!=0)
+                return true;
+
+            index = bm.bispo[iFrom].posicao;
+            occ = bm.bispo[iFrom].mascara | todas;
+            occ *= bm.bispo[iFrom].fator;
+            occ >>= (64 - 9);
+            index = index + (uint)occ;
+
+            if ((bm.tabela[index] & (bbs[(int)tipoPeca.BISPO + corAtacante] | bbs[(int)tipoPeca.RAINHA + corAtacante])) != 0)
+                return true;
+
+            return false;
+
+        }
+
+        public bool isChecked()
+        {
+            return casaAtacada(bbs[(int)tipoPeca.REI + corMover], 1 - corMover);
+        }
+               
+        public bool isValido()
+        {
+            return !casaAtacada(bbs[(int)tipoPeca.REI + 1 - corMover], corMover);
+        }
 
         public void makeMove(Move move)
         {
+            move.enPassant = this.enPassant;
+            move.potencialRoque = this.potencialRoque;
+
+            if ((potencialRoque & (bbConstants.ROQUE_REI_BRANCO | bbConstants.ROQUE_RAINHA_BRANCO))!=0)
+            {
+                if (move.peca == tipoPeca.REI)
+                    move.potencialRoque &= (bbConstants.ROQUE_REI_PRETO | bbConstants.ROQUE_RAINHA_PRETO);
+                if (((move.bbFrom | move.bbTo) & bbConstants.I56) != 0)
+                    move.potencialRoque &= ~bbConstants.ROQUE_RAINHA_BRANCO;
+                if (((move.bbFrom | move.bbTo) & bbConstants.I63) != 0)
+                    move.potencialRoque &= ~bbConstants.ROQUE_REI_BRANCO;
+            }
+            if  ((potencialRoque & (bbConstants.ROQUE_REI_PRETO | bbConstants.ROQUE_RAINHA_PRETO)) != 0)
+            {
+                if (move.peca == tipoPeca.RP)
+                    move.potencialRoque &= (bbConstants.ROQUE_REI_BRANCO | bbConstants.ROQUE_RAINHA_BRANCO);
+                if (((move.bbFrom | move.bbTo) & bbConstants.I00) != 0)
+                    move.potencialRoque &= ~bbConstants.ROQUE_RAINHA_PRETO;
+                if (((move.bbFrom | move.bbTo) & bbConstants.I07) != 0)
+                    move.potencialRoque &= ~bbConstants.ROQUE_REI_PRETO;
+            }
+
+
             switch (move.tipo)
             {
                 case tipoMovimento.MNORMAL:
@@ -78,6 +185,13 @@ namespace Hal.engine.board
                         this.removePeca(move.bbFrom, move.peca, move.indiceDe);
                         this.addPeca(move.bbTo, move.peca, move.indicePara);
                     } break;
+                case tipoMovimento.MCAP:
+                    {
+                        this.removePeca(move.bbFrom, move.peca, move.indiceDe);
+                        this.removePeca(move.bbTo, move.pecaCap, move.indicePara);
+                        this.addPeca(move.bbTo, move.peca, move.indicePara);
+                    } break;
+
                 case tipoMovimento.MROQUEK:
                     {
                         int cor = (int)move.peca % 2;
@@ -135,10 +249,14 @@ namespace Hal.engine.board
                     } break;
 
             }
+            this.corMover = 1 - corMover;
+
         }
 
         public void unmakeMove(Move move)
         {
+            this.enPassant = move.enPassant;
+            this.potencialRoque = move.potencialRoque;
             switch (move.tipo){
                 case tipoMovimento.MNORMAL:
                     {
@@ -216,6 +334,7 @@ namespace Hal.engine.board
                     break;
 
             }
+            this.corMover = 1 - corMover;
 
         }
 
@@ -403,7 +522,7 @@ namespace Hal.engine.board
         {
             ulong reis= bbs[(int)tipoPeca.REI + corMover];
             ulong movs;
-            ulong pFrom, pTo;
+            ulong pTo;
             int iFrom, iTo;
             tipoPeca pecaAtacada;
             ulong amigas = bbs[bbConstants.PECAS + corMover];
@@ -413,17 +532,14 @@ namespace Hal.engine.board
 
             if (capturas)
             {
-                while (reis > 0)
-                {
-                    pFrom = (ulong)((long)reis & -(long)reis);
-                    iFrom = bm.index(pFrom);
+                    iFrom = bm.index(reis);
                     movs = bm.mRei[iFrom] & inimigas;
                     while (movs > 0)
                     {
                         pTo = (ulong)((long)movs & -(long)movs);
                         iTo = bm.index(pTo);
                         pecaAtacada = this.getPecaPosicao(pTo, 1 - corMover);
-                        move = new Move(pFrom, pTo, tipoMovimento.MCAP,
+                        move = new Move(reis, pTo, tipoMovimento.MCAP,
                             (tipoPeca)(int)tipoPeca.REI + corMover,
                             pecaAtacada,
                             iFrom,
@@ -432,30 +548,94 @@ namespace Hal.engine.board
                         moves.Add(move);
                         movs = movs & (movs - 1);
                     }
-                    reis = reis & (reis- 1);
-                }
             }
             else
             {
-                while (reis> 0)
+                iFrom = bm.index(reis);
+                movs = bm.mRei[iFrom] & ~todas;
+                while (movs > 0)
                 {
-                    pFrom = (ulong)((long)reis & -(long)reis);
-                    iFrom = bm.index(pFrom);
-                    movs = bm.mCavalo[iFrom] & ~todas;
-                    while (movs > 0)
+                    pTo = (ulong)((long)movs & -(long)movs);
+                    iTo = bm.index(pTo);
+                    move = new Move(reis, pTo, tipoMovimento.MNORMAL,
+                        (tipoPeca)(int)tipoPeca.REI + corMover,
+                        tipoPeca.NENHUMA,
+                        iFrom,
+                        iTo
+                        );
+                    moves.Add(move);
+                    movs = movs & (movs - 1);
+                }
+                if ((this.corMover == 0) && (((this.potencialRoque & (bbConstants.ROQUE_RAINHA_BRANCO | bbConstants.ROQUE_REI_BRANCO))!=0)))
+                {
+                    if ((this.potencialRoque & bbConstants.ROQUE_REI_BRANCO) != 0)
                     {
-                        pTo = (ulong)((long)movs & -(long)movs);
-                        iTo = bm.index(pTo);
-                        move = new Move(pFrom, pTo, tipoMovimento.MNORMAL,
-                            (tipoPeca)(int)tipoPeca.REI + corMover,
-                            tipoPeca.NENHUMA,
-                            iFrom,
-                            iTo
-                            );
-                        moves.Add(move);
-                        movs = movs & (movs - 1);
+                        if (((todas & (bbConstants.I62 | bbConstants.I61)) == 0)
+                            && (!casaAtacada(bbConstants.I60, 1))
+                            && (!casaAtacada(bbConstants.I61, 1))
+                            && (!casaAtacada(bbConstants.I62, 1))
+                            && (!casaAtacada(bbConstants.I63, 1)))
+                        {
+                            move = new Move(reis, bbConstants.I63,
+                                tipoMovimento.MROQUEK,
+                                tipoPeca.REI, tipoPeca.NENHUMA,
+                                60, 63);
+                            moves.Add(move);
+                        }
                     }
-                    reis = reis & (reis - 1);
+                    if ((this.potencialRoque & bbConstants.ROQUE_RAINHA_BRANCO) != 0)
+                    { 
+                        if (((todas & (bbConstants.I57 | bbConstants.I58 | bbConstants.I59)) == 0)
+                            && (!casaAtacada(bbConstants.I56, 1))
+                            && (!casaAtacada(bbConstants.I57, 1))
+                            && (!casaAtacada(bbConstants.I58, 1))
+                            && (!casaAtacada(bbConstants.I59, 1))
+                            && (!casaAtacada(bbConstants.I60, 1)))
+                        {
+                            move = new Move(reis, bbConstants.I56,
+                                tipoMovimento.MROQUEQ,
+                                tipoPeca.REI, tipoPeca.NENHUMA,
+                                60, 56);
+                            moves.Add(move);
+                        }
+
+                    }
+                }
+                else if ((this.corMover != 0) && (((this.potencialRoque & (bbConstants.ROQUE_RAINHA_PRETO| bbConstants.ROQUE_REI_PRETO)) != 0)))
+                {
+                    if ((this.potencialRoque & bbConstants.ROQUE_REI_PRETO) != 0)
+                    {
+                        if (((todas & (bbConstants.I05 | bbConstants.I06)) == 0)
+                            && (!casaAtacada(bbConstants.I04, 1))
+                            && (!casaAtacada(bbConstants.I05, 1))
+                            && (!casaAtacada(bbConstants.I06, 1))
+                            && (!casaAtacada(bbConstants.I07, 1)))
+                        {
+                            move = new Move(reis, bbConstants.I07,
+                                tipoMovimento.MROQUEK,
+                                tipoPeca.RP, tipoPeca.NENHUMA,
+                                4, 7);
+                            moves.Add(move);
+                        }
+                    }
+                    if ((this.potencialRoque & bbConstants.ROQUE_RAINHA_PRETO) != 0)
+                    {
+                        if (((todas & (bbConstants.I03 | bbConstants.I02 | bbConstants.I01)) == 0)
+                            && (!casaAtacada(bbConstants.I00, 0))
+                            && (!casaAtacada(bbConstants.I01, 0))
+                            && (!casaAtacada(bbConstants.I02, 0))
+                            && (!casaAtacada(bbConstants.I03, 0))
+                            && (!casaAtacada(bbConstants.I04, 0)))
+                        {
+                            move = new Move(reis, bbConstants.I56,
+                                tipoMovimento.MROQUEQ,
+                                tipoPeca.REI, tipoPeca.NENHUMA,
+                                4, 0);
+                            moves.Add(move);
+                        }
+
+                    }
+
                 }
             }
 
@@ -536,8 +716,9 @@ namespace Hal.engine.board
                 tipoPeca pAtacada;
                 ulong promos;
                 int iFrom, iTo;
+                int j;
 
-                while (peoes != 0)
+                while (peoes != 0) 
                 {
                     pFrom = (ulong)((long)peoes & -(long)peoes);
                     iFrom = bm.index(pFrom);
@@ -552,7 +733,7 @@ namespace Hal.engine.board
                         pTo = (ulong)((long)ataques & -(long)ataques);
                         iTo = bm.index(pTo);
                         pAtacada = this.getPecaPosicao(pTo, (byte)1 - corMover);
-                        for (j = tipoPeca.RAINHA + corMover; j > tipoPeca.PP; j -= 2)
+                        for (j = (int)tipoPeca.RAINHA + corMover; j > (int) tipoPeca.PP; j -= 2)
                         {
                             move = new Move(pFrom, pTo, (tipoMovimento)((int)tipoMovimento.MPROMOCAP + j),
                                 (tipoPeca)((int)tipoPeca.PEAO + corMover),
@@ -591,12 +772,12 @@ namespace Hal.engine.board
                     ulong todas = amigas | inimigas;
 
                     ulong movs = (bbs[(int)tipoPeca.PEAO] >> 8) & ~todas;
-                    ulong movsDuplos = ((movs & bbConstants.R3) >> 8) & ~todas;
-                    ulong pFrom, pTo;
+                    ulong movsDuplos = ((movs & bbConstants.R6) >> 8) & ~todas;
+                    ulong pFrom;
                     int iFrom, iTo;
                     while (movsDuplos > 0)
                     {
-                        pFrom = (ulong)((long)movsDuplos & -(long)movsDuplos);
+                        pFrom = (ulong)((long)movsDuplos & -(long)movsDuplos)<<16;
                         iFrom = bm.index(pFrom);
                         iTo = iFrom - 16;
                         move = new Move(pFrom, pFrom >> 16, tipoMovimento.MDUPLO, tipoPeca.PEAO,
@@ -607,7 +788,7 @@ namespace Hal.engine.board
 
                     while (movs > 0)
                     {
-                        pFrom = (ulong)((long)movs & -(long)movs);
+                        pFrom = (ulong)((long)movs & -(long)movs)<<8;
                         iFrom = bm.index(pFrom);
                         iTo = iFrom - 8;
                         move = new Move(pFrom, pFrom >> 8, tipoMovimento.MNORMAL, tipoPeca.PEAO,
@@ -624,11 +805,11 @@ namespace Hal.engine.board
 
                     ulong movs = (bbs[(int)tipoPeca.PP] << 8) & ~todas;
                     ulong movsDuplos = ((movs & bbConstants.R3) << 8) & ~todas;
-                    ulong pFrom, pTo;
+                    ulong pFrom;
                     int iFrom, iTo;
                     while (movsDuplos > 0)
                     {
-                        pFrom = (ulong)((long)movsDuplos & -(long)movsDuplos);
+                        pFrom = (ulong)((long)movsDuplos & -(long)movsDuplos)>>16;
                         iFrom = bm.index(pFrom);
                         iTo = iFrom + 16;
                         move = new Move(pFrom, pFrom << 16, tipoMovimento.MDUPLO, tipoPeca.PP,
@@ -639,7 +820,7 @@ namespace Hal.engine.board
 
                     while (movs > 0)
                     {
-                        pFrom = (ulong)((long)movs & -(long)movs);
+                        pFrom = (ulong)((long)movs & -(long)movs)>>8;
                         iFrom = bm.index(pFrom);
                         iTo = iFrom + 8;
                         move = new Move(pFrom, pFrom << 8, tipoMovimento.MNORMAL, tipoPeca.PP,

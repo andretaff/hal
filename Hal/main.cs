@@ -1,4 +1,4 @@
-﻿using Hal.Interface;
+﻿using Hal.userInterface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ namespace Hal
 {
     class main
     {
-        private uci uciInterface = new uci();
+        private Uci uciInterface = new Uci();
         private Thread tUci;
         private Thread tConsole;
 
@@ -32,10 +32,8 @@ namespace Hal
             string comando = "";
             while (true)
             {
-                Console.WriteLine("lendo");
                 comando = Console.ReadLine();
                 uciInterface.enviarComandoParaEngine(comando);
-
             }
         }
     }

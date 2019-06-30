@@ -13,7 +13,6 @@ namespace Hal
     {
         static void Main(string[] args)
         {
-            Game game = new Game();
             main mainApp = new main();
             mainApp.run();
 
