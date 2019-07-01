@@ -15,18 +15,18 @@ namespace Hal.userInterface
             return fen.Length-fen.Replace("/","").Length == 7;
         }
 
-        public static Board tabuleiroPadrao(BlackMagic bm)
+        public static Board tabuleiroPadrao(BlackMagic bm, TranspTable tabela)
         {
-            return lerFen(bm,"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
+            return lerFen(bm, tabela, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
         }
 
-        public static Board lerFen(BlackMagic bm, string fenString)
+        public static Board lerFen(BlackMagic bm, TranspTable tabela, string fenString)
         {
             int tipo = 0;
             int i,j;
             Char c;
 
-            Board tabuleiro = new Board(bm);
+            Board tabuleiro = new Board(bm,tabela);
 
             i = 0;
             int posicao = 0;

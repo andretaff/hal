@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 
 
-
+using Hal.engine.board;
 namespace Hal
 {
     class Hal

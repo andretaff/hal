@@ -20,29 +20,34 @@ namespace Hal.game
         Uci uci;
         NegaMax negamax;
         Thread tTemporizador;
+        TranspTable tabela;
+        Move bestMove;
+
+        internal Move BestMove { get => bestMove; set => bestMove = value; }
 
         public Game(Uci uci)
         {
             bm = new BlackMagic();
-            tabuleiro = new Board(bm);
+            this.tabela = new TranspTable(999999);
+            tabuleiro = new Board(bm,tabela);
             this.uci = uci;
-            this.negamax = new NegaMax(uci);
+            this.negamax = new NegaMax(uci,tabela);
         }
 
         public void run()
         {
-            Move move = negamax.go(tabuleiro,tTemporizador,temporizador);
-            uci.enviarComandoParaConsole("bestmove " + move.toAlgebra());
+            bestMove = negamax.go(tabuleiro,tTemporizador,temporizador);
+            uci.enviarComandoParaConsole("bestmove " + bestMove.toAlgebra());
         }
 
         public void newGame()
         {
-            this.tabuleiro = Fen.tabuleiroPadrao(bm);
+            this.tabuleiro = Fen.tabuleiroPadrao(bm,tabela);
         }
 
         public void setFenPosition(string fenString)
         {
-            this.tabuleiro = Fen.lerFen(bm, fenString);
+            this.tabuleiro = Fen.lerFen(bm, tabela, fenString);
         }
 
         public void start(tipoTempo tipo, ulong miliSecs )

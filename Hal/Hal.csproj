@@ -50,7 +50,11 @@
     <Compile Include="engine\bitboard\bbConstants.cs" />
     <Compile Include="engine\bitboard\BlackMagic.cs" />
     <Compile Include="engine\board\Board.cs" />
+    <Compile Include="engine\board\TranspTable.cs" />
+    <Compile Include="engine\tests\Matein2.cs" />
+    <Compile Include="engine\tests\Testing.cs" />
     <Compile Include="engine\ThreadQueue.cs" />
+    <Compile Include="engine\utils\Rnd64.cs" />
     <Compile Include="game\Game.cs" />
     <Compile Include="engine\move\Move.cs" />
     <Compile Include="engine\negamax\NegaMax.cs" />

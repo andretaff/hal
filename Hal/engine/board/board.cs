@@ -20,23 +20,27 @@ namespace Hal.engine.board
         private DNA dna = DNA.Instance;
         public int[] vMat;
         public uint potencialRoque = 0;
-        public ulong enPassant = 0;
+        public int enPassant = -1;
+        private ulong chave = 0;
+        private TranspTable transp;
 
 
-        public Board(BlackMagic bm)
+        public Board(BlackMagic bm, TranspTable transp)
         {
             bbs = new ulong[bbConstants.todosBBs];
             this.bm = bm;
             this.corMover = 0;
             vMat = new int[2];
+            this.transp = transp;
         }
 
         public Board clone()
         {
-            Board board = new Board(bm);
+            Board board = new Board(bm, transp);
             board.corMover = corMover;
             board.potencialRoque = potencialRoque;
             board.enPassant = enPassant;
+            board.chave = chave;
             board.vMat[0] = vMat[0];
             board.vMat[1] = vMat[1];
             int i;
@@ -47,21 +51,44 @@ namespace Hal.engine.board
             return board;
         }
 
+        public ulong getChave()
+        {
+            ulong chavereal = this.chave;
+            if ((this.potencialRoque & bbConstants.ROQUE_RAINHA_BRANCO) != 0)
+                chavereal ^=  transp.chavesRoque[0];
+            if ((this.potencialRoque & bbConstants.ROQUE_REI_BRANCO) != 0)
+                chavereal ^=  transp.chavesRoque[1];
+            if ((this.potencialRoque & bbConstants.ROQUE_RAINHA_PRETO) != 0)
+                chavereal ^= transp.chavesRoque[2];
+            if ((this.potencialRoque & bbConstants.ROQUE_REI_PRETO) != 0)
+                chavereal ^= transp.chavesRoque[3];
+            if ((this.enPassant != -1))
+                chavereal ^= transp.chaves[bbConstants.PECAS, this.enPassant];
+            if (this.corMover == 1)
+                chavereal ^= transp.chaveBTM;
+            return chavereal;
+
+        }
+
         public void addPeca(ulong posicao, tipoPeca peca, int index)
         {
             int cor = (int)peca % 2;
             this.bbs[(int)peca] ^= posicao;
-            this.bbs[cor + bbConstants.PECAS] ^= posicao;
+            this.bbs[cor + bbConstants.PECAS] |= posicao;
             vMat[cor] += dna.vPecas[(int)peca];
+            this.chave ^= transp.chaves[(int)peca, index];
 
         }
 
         public void removePeca(ulong posicao, tipoPeca peca, int index)
         {
+            if (peca == tipoPeca.NENHUMA)
+                return;
             int cor = (int)peca % 2;
             this.bbs[(int)peca] ^= posicao;
-            this.bbs[cor + bbConstants.PECAS] ^= posicao;
+            this.bbs[cor + bbConstants.PECAS] &= ~posicao;
             vMat[cor] -= dna.vPecas[(int)peca];
+            this.chave ^= transp.chaves[(int)peca, index];
         }
 
         public void print()
@@ -107,13 +134,13 @@ namespace Hal.engine.board
 
             iFrom = bm.index(bb);
 
-            if ((bm.aPeao[corAtacante][iFrom] & bbs[(int)tipoPeca.PEAO + corAtacante]) != 0)
+            if ((bm.aPeao[1-corAtacante][iFrom] & bbs[(int)tipoPeca.PEAO + corAtacante]) != 0)
                 return true;
 
             if ((bm.mRei[iFrom] & bbs[(int)tipoPeca.REI + corAtacante]) != 0)
                 return true;
 
-            if ((bm.mCavalo[iFrom] & bbs[(int)tipoPeca.PEAO + corAtacante]) != 0)
+            if ((bm.mCavalo[iFrom] & bbs[(int)tipoPeca.CAVALO + corAtacante]) != 0)
                 return true;
 
             index = bm.torre[iFrom].posicao;
@@ -728,9 +755,11 @@ namespace Hal.engine.board
                     else
                         promos = ataques & bbConstants.R8;
 
+                    ataques &= ~promos;
+
                     while (promos != 0)
                     {
-                        pTo = (ulong)((long)ataques & -(long)ataques);
+                        pTo = (ulong)((long)promos & -(long)promos);
                         iTo = bm.index(pTo);
                         pAtacada = this.getPecaPosicao(pTo, (byte)1 - corMover);
                         for (j = (int)tipoPeca.RAINHA + corMover; j > (int) tipoPeca.PP; j -= 2)
@@ -741,10 +770,10 @@ namespace Hal.engine.board
                                 iFrom,
                                 iTo);
                             moves.Add(move);
-                            promos = promos & (promos - 1);
+                            
                         }
 
-                        ataques = ataques & (ataques - 1);
+                        promos = promos & (promos - 1);
                     }
 
                     while (ataques != 0)
@@ -773,8 +802,31 @@ namespace Hal.engine.board
 
                     ulong movs = (bbs[(int)tipoPeca.PEAO] >> 8) & ~todas;
                     ulong movsDuplos = ((movs & bbConstants.R6) >> 8) & ~todas;
+                    ulong promos = movs & bbConstants.R1;
                     ulong pFrom;
-                    int iFrom, iTo;
+                    int iFrom, iTo,j;
+
+                    movs &= ~promos;
+
+                    while (promos != 0)
+                    {
+                        pFrom = (ulong)((long)promos & -(long)promos) << 8;
+                        iFrom = bm.index(pFrom);
+                        iTo = iFrom - 8;
+                        for (j = (int)tipoPeca.RAINHA + corMover; j > (int)tipoPeca.PP; j -= 2)
+                        {
+                            move = new Move(pFrom, pFrom >> 8, (tipoMovimento)((int)tipoMovimento.MPROMO + j),
+                                (tipoPeca)((int)tipoPeca.PEAO + corMover),
+                                tipoPeca.NENHUMA,
+                                iFrom,
+                                iTo);
+                            moves.Add(move);
+
+                        }
+                        promos &= (promos - 1);
+                    }
+
+
                     while (movsDuplos > 0)
                     {
                         pFrom = (ulong)((long)movsDuplos & -(long)movsDuplos)<<16;
@@ -802,11 +854,32 @@ namespace Hal.engine.board
                     ulong amigas = bbs[bbConstants.PECAS + corMover];
                     ulong inimigas = bbs[bbConstants.PECAS + 1 - corMover];
                     ulong todas = amigas | inimigas;
-
                     ulong movs = (bbs[(int)tipoPeca.PP] << 8) & ~todas;
-                    ulong movsDuplos = ((movs & bbConstants.R3) << 8) & ~todas;
+                    ulong promos = movs & bbConstants.R8;
+ulong movsDuplos = ((movs & bbConstants.R3) << 8) & ~todas;
                     ulong pFrom;
-                    int iFrom, iTo;
+                    int iFrom, iTo,j;
+
+                    movs &= ~promos;
+
+                    while (promos != 0)
+                    {
+                        pFrom = (ulong)((long)promos & -(long)promos) >> 8;
+                        iFrom = bm.index(pFrom);
+                        iTo = iFrom - 8;
+                        for (j = (int)tipoPeca.RAINHA + corMover; j > (int)tipoPeca.PP; j -= 2)
+                        {
+                            move = new Move(pFrom, pFrom << 8, (tipoMovimento)((int)tipoMovimento.MPROMO + j),
+                                (tipoPeca)((int)tipoPeca.PEAO + corMover),
+                                tipoPeca.NENHUMA,
+                                iFrom,
+                                iTo);
+                            moves.Add(move);
+
+                        }
+                        promos &= (promos - 1);
+                    }
+
                     while (movsDuplos > 0)
                     {
                         pFrom = (ulong)((long)movsDuplos & -(long)movsDuplos)>>16;

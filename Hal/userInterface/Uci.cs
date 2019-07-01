@@ -1,4 +1,5 @@
-﻿using Hal.game;
+﻿using Hal.engine.tests;
+using Hal.game;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,12 @@ namespace Hal.userInterface
                     if (comando=="uci")
                     {
                         this.cUci();
+                    }
+                    if (comando =="test")
+                    {
+                        Matein2 matein2 = new Matein2(this,game);
+                        Thread thread = new Thread(new ThreadStart(matein2.test));
+                        thread.Start();
                     }
 
                     if (comando == "isready")

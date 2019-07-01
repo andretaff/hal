@@ -202,6 +202,86 @@ namespace Hal.engine.bitboard
             return (ulong) Math.Pow(2, indice);
         }
 
+        public static string bbToString(ulong bb)
+        {
+            string s = "";
+            if ((bb & bbConstants.C1) != 0)
+                s = s + "a";
+            else if ((bb & bbConstants.C2) != 0)
+                s = s + "b";
+            else if ((bb & bbConstants.C3) != 0)
+                s = s + "c";
+            else if ((bb & bbConstants.C4) != 0)
+                s = s + "d";
+            else if ((bb & bbConstants.C5) != 0)
+                s = s + "e";
+            else if ((bb & bbConstants.C6) != 0)
+                s = s + "f";
+            else if ((bb & bbConstants.C7) != 0)
+                s = s + "g";
+            else if ((bb & bbConstants.C8) != 0)
+                s = s + "h";
+
+            if ((bb & bbConstants.R1) != 0)
+                s += "8";
+            else if ((bb & bbConstants.R2) != 0)
+                s += "7";
+            else if ((bb & bbConstants.R3) != 0)
+                s += "6";
+            else if ((bb & bbConstants.R4) != 0)
+                s += "5";
+            else if ((bb & bbConstants.R5) != 0)
+                s += "4";
+            else if ((bb & bbConstants.R6) != 0)
+                s += "3";
+            else if ((bb & bbConstants.R7) != 0)
+                s += "2";
+            else if ((bb & bbConstants.R8) != 0)
+                s += "1";
+
+            return s;
+        }
+
+        public static ulong getBBFromAlg(string alg)
+        {
+            ulong saida = 0;
+            if (alg[0] == 'a')
+                saida = bbConstants.C1;
+            if (alg[0] == 'b')
+                saida = bbConstants.C2;
+            if (alg[0] == 'c')
+                saida = bbConstants.C3;
+            if (alg[0] == 'd')
+                saida = bbConstants.C4;
+            if (alg[0] == 'e')
+                saida = bbConstants.C5;
+            if (alg[0] == 'f')
+                saida = bbConstants.C6;
+            if (alg[0] == 'g')
+                saida = bbConstants.C7;
+            if (alg[0] == 'h')
+                saida = bbConstants.C8;
+
+            if (alg[1] == '8')
+                saida &= bbConstants.R1;
+            if (alg[1] == '7')
+                saida &= bbConstants.R2;
+            if (alg[1] == '6')
+                saida &= bbConstants.R3;
+            if (alg[1] == '5')
+                saida &= bbConstants.R4;
+            if (alg[1] == '4')
+                saida &= bbConstants.R5;
+            if (alg[1] == '3')
+                saida &= bbConstants.R6;
+            if (alg[1] == '2')
+                saida &= bbConstants.R7;
+            if (alg[1] == '1')
+                saida &= bbConstants.R8;
+
+            return saida;
+        }
+
         private void iniciar()
         {
             int i;

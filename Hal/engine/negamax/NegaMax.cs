@@ -16,17 +16,25 @@ namespace Hal.engine.negamax
     {
         private Uci uci;
         private Avaliador avaliador;
-        public NegaMax(Uci uci)
+        private TranspTable tabela;
+        private Move finalResult;
+
+
+        public NegaMax(Uci uci, TranspTable tabela)
         {
             this.uci = uci;
             this.avaliador = new Avaliador();
+            this.tabela = tabela;
         }
+
+        internal Move FinalResult { get => finalResult; set => finalResult = value; }
+
         public Move go (Board tabuleiro, Thread ttemporizador, TimeControl temporizador)
         {
-            int numberOfThreads = 1;
+            int numberOfThreads = 4;
             NegaThread.negaResult resultadoTemp, resultado;
             ThreadQueue<NegaThread.negaResult> results = new ThreadQueue<NegaThread.negaResult>();
-            NegaThread negathread;
+            NegaThread[] negathread = new NegaThread[numberOfThreads];
             int i;
             List<Thread> threads = new List<Thread>();
             Thread thread;
@@ -44,14 +52,14 @@ namespace Hal.engine.negamax
                 results.Clear();
                 profundidade = profundidade + 1;
                 bParar = false;
-                unsafe
-                {
-                    negathread = new NegaThread(tabuleiro, profundidade, avaliador, ttemporizador, &bParar, results);
-                }
-
                 for (i = 0; i < numberOfThreads; i++)
                 {
-                    thread = new Thread(new ThreadStart(negathread.Run));
+                    unsafe
+                    {
+                        negathread[i] = new NegaThread(tabuleiro, profundidade, avaliador, ttemporizador, &bParar, results, tabela);
+                    }
+
+                    thread = new Thread(new ThreadStart(negathread[i].Run));
                     thread.Start();
                     threads.Add(thread);
                 }
@@ -75,10 +83,14 @@ namespace Hal.engine.negamax
                                                  "depth " + Convert.ToString(profundidade) + " " +
                                                  "nodes " + Convert.ToString(resultado.nodes) + " " +
                                                  "time " + Convert.ToString(temporizador.ellapsedTime()) + " " +
+                                                 "tbhits "+ Convert.ToString(resultado.hits) + " "+
                                                  "currmove " + resultado.move.toAlgebra());
                         
                 }
-
+                if (resultado.nota>9990)
+                {
+                    break;
+                }
              }
             return resultado.move;
 
