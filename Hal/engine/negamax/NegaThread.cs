@@ -23,6 +23,7 @@ namespace Hal.engine.negamax
         Thread temporizador;
         private TranspTable tabela;
         private ulong hits;
+        private uint age;
 
         private ThreadQueue<negaResult> resultados;
 
@@ -49,9 +50,11 @@ namespace Hal.engine.negamax
             result.move = this.move;
             result.nodes = this.nodes;
             result.hits = this.hits;
-            if (resultados.isEmpty())
-                resultados.put(result);
-
+            unsafe
+            {
+                if ((!*bParar) &&(resultados.isEmpty()))
+                    resultados.put(result);
+            }
         }
 
 
@@ -63,6 +66,7 @@ namespace Hal.engine.negamax
             Move melhorMov = new Move();
             List<Move> moves;
             melhorMov.peca = tipoPeca.NENHUMA;
+            bool check;
 
             unsafe
             {
@@ -73,7 +77,7 @@ namespace Hal.engine.negamax
             }
 
             this.nodes++;
-            Tuple<bool,TranspItem> retorno = tabela.recuperar(tabuleiro.getChave(), ply, 0);
+            Tuple<bool,TranspItem> retorno = tabela.recuperar(tabuleiro.getChave(), ply, age);
             if (retorno.Item1)
             {
                 this.hits++;
@@ -104,7 +108,15 @@ namespace Hal.engine.negamax
             }
             valor = -99999999;
             melhorValor = -99999999;
+            check = tabuleiro.isChecked();
+            if (check)
+            {
+                ply++;
+                tabuleiro.print();
+            }
+
             moves = tabuleiro.gerarMovimentos();
+
 
             foreach (Move move in moves)
             {
@@ -145,7 +157,7 @@ namespace Hal.engine.negamax
 
             if (melhorMov.peca == tipoPeca.NENHUMA)
             {
-                if (tabuleiro.isChecked())
+                if (check)
                 {
                     return -99999;
                 }
@@ -167,7 +179,7 @@ namespace Hal.engine.negamax
             }
             TranspItem itemT = new TranspItem();
             itemT.move = melhorMov;
-            itemT.idade = 0;
+            itemT.idade = age;
             itemT.score = alfa;
             itemT.chave = tabuleiro.getChave();
             itemT.ply = ply;
@@ -188,7 +200,7 @@ namespace Hal.engine.negamax
 
         unsafe
 
-            public NegaThread(Board tabuleiro, int profundidade, Avaliador avaliador, Thread temporizador, bool* bParar, ThreadQueue<negaResult> resultados, TranspTable tabela)
+            public NegaThread(Board tabuleiro, int profundidade, Avaliador avaliador, Thread temporizador, bool* bParar, ThreadQueue<negaResult> resultados, TranspTable tabela, uint age)
         {
             this.tabuleiro = tabuleiro.clone();
             this.maxPly = profundidade;
@@ -197,6 +209,7 @@ namespace Hal.engine.negamax
             this.temporizador = temporizador;
             this.hits = 0;
             this.tabela = tabela;
+            this.age = age;
             unsafe
             {
                 this.bParar = bParar;

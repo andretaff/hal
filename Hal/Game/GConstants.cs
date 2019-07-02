@@ -8,7 +8,7 @@ namespace Hal.game
 {
     static class GConstants
     {
-        public const string ENGINE_NAME = "HalCS 0.001";
+        public const string ENGINE_NAME = "HalCS 0.001 - 4 threads";
         public const string AUTHOR = "André Taffarello";
     }
 }

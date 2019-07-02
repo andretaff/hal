@@ -69,7 +69,7 @@ namespace Hal.engine.board
             }
         }
 
-        public Tuple<bool,TranspItem> recuperar(ulong chave, int ply, int idade)
+        public Tuple<bool,TranspItem> recuperar(ulong chave, int ply, uint idade)
         {
             TranspItem item;
             uint pos = (uint)(chave % (ulong)size);

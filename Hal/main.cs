@@ -25,6 +25,7 @@ namespace Hal
                 Thread.Sleep(10);
             }
             tConsole.Abort();
+            Environment.Exit(0);
         }
 
         void consoleRead()

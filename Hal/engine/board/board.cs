@@ -96,6 +96,8 @@ namespace Hal.engine.board
             ulong posicao = 1;
             int index = 0;
             string linha="";
+            Console.Out.WriteLine(linha);
+            Console.Out.WriteLine(linha);
             do
             {
                 int i;
@@ -116,6 +118,10 @@ namespace Hal.engine.board
                 index++;
                 posicao <<= 1;
             } while (index < 64);
+            if (corMover == 0)
+                Console.Out.WriteLine("Branco para mover");
+            else
+                Console.Out.WriteLine("Preto para mover");
         }
 
         public void addPecaHumana(tipoPeca peca, int index)

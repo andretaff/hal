@@ -28,7 +28,7 @@ namespace Hal.game
         public Game(Uci uci)
         {
             bm = new BlackMagic();
-            this.tabela = new TranspTable(999999);
+            this.tabela = new TranspTable(9999999);
             tabuleiro = new Board(bm,tabela);
             this.uci = uci;
             this.negamax = new NegaMax(uci,tabela);

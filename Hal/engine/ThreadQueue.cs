@@ -10,7 +10,7 @@ namespace Hal.engine
 
     class ThreadQueue<T>
     {
-        object obj = new object();
+        static object obj = new object();
         Queue<T> fila = new Queue<T>();
 
         public void put (T item)

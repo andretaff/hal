@@ -18,6 +18,7 @@ namespace Hal.engine.negamax
         private Avaliador avaliador;
         private TranspTable tabela;
         private Move finalResult;
+        private uint age;
 
 
         public NegaMax(Uci uci, TranspTable tabela)
@@ -25,6 +26,7 @@ namespace Hal.engine.negamax
             this.uci = uci;
             this.avaliador = new Avaliador();
             this.tabela = tabela;
+            age = 0;
         }
 
         internal Move FinalResult { get => finalResult; set => finalResult = value; }
@@ -32,6 +34,7 @@ namespace Hal.engine.negamax
         public Move go (Board tabuleiro, Thread ttemporizador, TimeControl temporizador)
         {
             int numberOfThreads = 4;
+            age++;
             NegaThread.negaResult resultadoTemp, resultado;
             ThreadQueue<NegaThread.negaResult> results = new ThreadQueue<NegaThread.negaResult>();
             NegaThread[] negathread = new NegaThread[numberOfThreads];
@@ -56,7 +59,7 @@ namespace Hal.engine.negamax
                 {
                     unsafe
                     {
-                        negathread[i] = new NegaThread(tabuleiro, profundidade, avaliador, ttemporizador, &bParar, results, tabela);
+                        negathread[i] = new NegaThread(tabuleiro, profundidade, avaliador, ttemporizador, &bParar, results, tabela,age);
                     }
 
                     thread = new Thread(new ThreadStart(negathread[i].Run));
@@ -65,13 +68,15 @@ namespace Hal.engine.negamax
                 }
                 while (!bAchou)
                 {
-                    Thread.Sleep(10);
+                    Thread.Sleep(5);
                     if (!results.isEmpty())
                     {
                         bParar = true;
                         resultadoTemp = results.get();
                         bAchou = true;
-
+                        for (i = 0; i < numberOfThreads; i++)
+                            threads[i].Abort();
+                        Thread.Sleep(1);
                     }
                 }
 

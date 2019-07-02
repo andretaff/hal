@@ -7,7 +7,6 @@ using Hal.engine.bitboard;
 using Hal.engine.board;
 using Hal.game;
 using Hal.userInterface;
-using Hal.engine.bitboard;
 
 namespace Hal.engine.tests
 {
@@ -27,6 +26,7 @@ namespace Hal.engine.tests
             string linha;
             int estagio = 0;
             file = new System.IO.StreamReader("matein2.txt");
+            this.startTime();
             while ((linha = file.ReadLine())!= null)
             {
                 if ((estagio == 0) && Fen.isValida(linha))
@@ -36,6 +36,7 @@ namespace Hal.engine.tests
                 }
                 else if (estagio == 1)
                 {
+                    linha = linha.Replace("x", "");
                     string pecaMov = ""+linha[0];
                     string casas = linha.Substring(1);
                     uci.enviarComandoParaConsole(linha);
@@ -51,7 +52,16 @@ namespace Hal.engine.tests
                     uci.enviarComandoParaConsole(linha);
                 }
             }
+            file.Close();
+            System.IO.StreamWriter arquivo = new System.IO.StreamWriter("matein2Results.txt", true);
+            arquivo.WriteLine(DateTime.Now.ToString("dd/MM/yy", System.Globalization.DateTimeFormatInfo.InvariantInfo) +
+                                " - tempo " + Convert.ToString(this.timeEllapsed()) + " - " + GConstants.ENGINE_NAME);
+
+            uci.enviarComandoParaConsole(DateTime.Now.ToString("dd/MM/yy", System.Globalization.DateTimeFormatInfo.InvariantInfo) +
+                                " - tempo " + Convert.ToString(this.timeEllapsed()) + " - " + GConstants.ENGINE_NAME);
+            arquivo.Close();
         }
+
 
     }
 }

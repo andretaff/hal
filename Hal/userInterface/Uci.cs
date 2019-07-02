@@ -45,6 +45,7 @@ namespace Hal.userInterface
 
                     if (comando == "isready")
                     {
+                        
 
                     }
                     if (comando == "ucinewgame")
@@ -66,6 +67,7 @@ namespace Hal.userInterface
 
                     if (comando == "quit")
                     {
+                        game.stop();
                         break;
                     }
                 }
@@ -84,6 +86,11 @@ namespace Hal.userInterface
         private void cUcinewGame()
         {
             game.newGame();
+        }
+
+        private void cUciIsReady()
+        {
+            this.enviarComandoParaConsole("readyok"); ///Todo! melhorar com o status do game
         }
 
         private void cUci()
@@ -111,6 +118,7 @@ namespace Hal.userInterface
                     movePos = comando.Length;
                 string fenstr = comando.Substring(8,movePos);
                 game.setFenPosition(fenstr);
+                game.make
             }
         }
 
