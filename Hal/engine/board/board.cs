@@ -70,6 +70,101 @@ namespace Hal.engine.board
 
         }
 
+        public void gerarMobilidade()
+        {
+            ulong amigas;
+            ulong inimigas;
+            ulong todas;
+            ulong pecas;
+            ulong pecaMover;
+            ulong movs;
+            ulong occ;
+            int index;
+            uint origem;
+
+            this.bbs[bbConstants.ATB] = 0;
+            this.bbs[bbConstants.ATP] = 0;
+
+
+            todas = bbs[bbConstants.PECAS] | bbs[bbConstants.PECAS + 1];
+            bbs[bbConstants.ATB] = (bbs[(int)tipoPeca.PEAO] << 8) & ~todas;
+            bbs[bbConstants.ATP] = (bbs[(int)tipoPeca.PEAO + 1] >> 8) & ~todas;
+
+            pecas = bbs[(int)tipoPeca.PEAO];
+
+            while (pecas > 0)
+            {
+                pecaMover = (ulong)((long)pecas & -(long)pecas);
+                index = bm.index(pecaMover);
+                movs = bm.aPeao[0][index] & bbs[bbConstants.PECAS + 1];
+                bbs[bbConstants.ATB] |= movs;
+                pecas &= (pecas - 1);
+            }
+
+            pecas = bbs[(int)tipoPeca.PEAO];
+
+            while (pecas > 0)
+            {
+                pecaMover = (ulong)((long)pecas & -(long)pecas);
+                index = bm.index(pecaMover);
+                movs = bm.aPeao[1][index] & bbs[bbConstants.PECAS];
+                bbs[bbConstants.ATP] |= movs;
+                pecas &= (pecas - 1);
+            }
+
+
+            for (int cor = 0; cor < 2; cor++)
+            {
+                amigas = this.bbs[bbConstants.PECAS];
+                inimigas = this.bbs[bbConstants.PECAS + 1];
+
+                pecas = this.bbs[(int)tipoPeca.CAVALO + cor];
+                while (pecas > 0)
+                {
+                    pecaMover = (ulong)((long)pecas & -(long)pecas);
+                    index = bm.index(pecaMover);
+                    movs = bm.mCavalo[index] & ~amigas;
+                    this.bbs[bbConstants.ATB + cor] |= movs;
+                    pecas &= (pecas - 1);
+                }
+
+                pecas = this.bbs[(int)tipoPeca.BISPO + cor] | this.bbs[(int)tipoPeca.RAINHA + cor];
+                while (pecas > 0)
+                {
+                    pecaMover = (ulong)((long)pecas & -(long)pecas);
+                    index = bm.index(pecaMover);
+                    origem = bm.bispo[index].posicao;
+                    occ = bm.bispo[index].mascara | todas;
+                    occ *= bm.bispo[index].fator;
+                    occ >>= (64 - 9);
+                    origem += (uint)occ;
+
+                    movs = bm.tabela[index] & ~amigas;
+                    this.bbs[bbConstants.ATB + cor] |= movs;
+                    pecas &= (pecas - 1);
+                }
+                pecas = this.bbs[(int)tipoPeca.TORRE + cor] | this.bbs[(int)tipoPeca.RAINHA + cor];
+                while (pecas > 0)
+                {
+                    pecaMover = (ulong)((long)pecas & -(long)pecas);
+                    index = bm.index(pecaMover);
+                    origem = bm.bispo[index].posicao;
+                    occ = bm.torre[index].mascara | todas;
+                    occ *= bm.torre[index].fator;
+                    occ >>= (64 - 12);
+                    origem += (uint)occ;
+
+                    movs = bm.tabela[index] & ~amigas;
+                    this.bbs[bbConstants.ATB + cor] |= movs;
+                    pecas &= (pecas - 1);
+                }
+                pecaMover = bbs[(int)tipoPeca.REI + cor];
+                index = bm.index(pecaMover);
+                movs = bm.mRei[index] & ~amigas;
+                this.bbs[bbConstants.ATB + cor] |= movs;
+            }
+        }
+
         public void addPeca(ulong posicao, tipoPeca peca, int index)
         {
             int cor = (int)peca % 2;

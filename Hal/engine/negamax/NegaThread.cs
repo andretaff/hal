@@ -102,17 +102,16 @@ namespace Hal.engine.negamax
                 }
                 melhorMov.peca = tipoPeca.NENHUMA;
             }
-            if (ply == 0)
-            {
-                return this.avaliador.avaliar(tabuleiro);
-            }
             valor = -99999999;
             melhorValor = -99999999;
             check = tabuleiro.isChecked();
             if (check)
             {
                 ply++;
-                tabuleiro.print();
+            }
+            if (ply == 0)
+            {
+                return this.avaliador.avaliar(tabuleiro);
             }
 
             moves = tabuleiro.gerarMovimentos();

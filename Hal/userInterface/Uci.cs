@@ -107,20 +107,30 @@ namespace Hal.userInterface
 
         private void cUciPosition(string comando)
         {
+            int movePos = comando.IndexOf("moves") - 1;
+            string moveStr;
             if (comando.IndexOf("startpos") != -1)
             {
                 game.newGame();
             }
             else
             {
-                int movePos = comando.IndexOf("moves") - 1;
-                if (movePos == -1)
-                    movePos = comando.Length;
-                string fenstr = comando.Substring(8,movePos);
+                string fenstr = comando.Substring(8, movePos);
+
                 game.setFenPosition(fenstr);
-                game.make
+            } 
+            if (movePos < 0)
+            {
+                movePos = comando.Length;
+                moveStr = "";
             }
+            else
+            {
+                moveStr = comando.Substring(movePos + 7, comando.Length-movePos-7);
+            }
+            game.makeHumanMoves(moveStr);
         }
+    
 
         private void cUciGo(string comando)
         {

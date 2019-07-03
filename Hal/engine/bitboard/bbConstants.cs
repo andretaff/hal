@@ -26,6 +26,8 @@ namespace Hal.engine.bitboard
     static class bbConstants
     {
         public const byte todosBBs = 16;
+        public const byte ATB = 14;
+        public const byte ATP = 15;
         public const byte PECAS = 12;
         public const string sPecas = "PpNnBbRrQqKk";
 
