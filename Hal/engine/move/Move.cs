@@ -10,8 +10,9 @@ namespace Hal.engine.move
     enum tipoMovimento { MNORMAL = 0,
         MDUPLO = 1,
         MCAP = 2,
-        MROQUEQ = 3,
-        MROQUEK = 4,
+        MCAPENPASSANT=3,
+        MROQUEQ = 4,
+        MROQUEK = 5,
         MPROMO = 10,
         MPROMON = 11,
         MPROMOB = 12,
@@ -24,7 +25,7 @@ namespace Hal.engine.move
         MPROMOCAPQ = 54
     } 
 
-    struct Move
+    class Move
     {
         public ulong bbFrom;
         public ulong bbTo;
@@ -45,34 +46,52 @@ namespace Hal.engine.move
             this.indiceDe = indiceDe;
             this.indicePara = indicePara;
             this.tipo = tipo;
-            this.enPassant = 0;
+            this.enPassant = -1;
             this.potencialRoque = 0;
         }
 
-        public void print()
+        public Move()
         {
-            string saida = bbConstants.sPecas[(int)this.peca]+ this.toAlgebra();
+            this.enPassant = -1;
+            this.potencialRoque = 0;
+        }
+
+        public Move(Move copiar)
+        {
+            this.bbFrom = copiar.bbFrom;
+            this.bbTo = copiar.bbTo;
+            this.peca = copiar.peca;
+            this.pecaCap = copiar.pecaCap;
+            this.indiceDe = copiar.indiceDe;
+            this.indicePara = copiar.indicePara;
+            this.tipo = copiar.tipo;
+            this.enPassant = copiar.enPassant;
+            this.potencialRoque = copiar.potencialRoque;        }
+
+        public void print(int ply = 0, int maxply = 0)
+        {
+            string saida = new string(' ', 5*(maxply-ply))+ bbConstants.sPecas[(int)this.peca]+ this.toAlgebra();
             Console.Out.WriteLine(saida);
         }
 
         public string toAlgebra()
         {
             string s="";
-            tipoPeca peca =tipoPeca.NENHUMA;
+            tipoPeca pecaPromo = tipoPeca.NENHUMA;
             if (!((tipo == tipoMovimento.MROQUEK) || (tipo == tipoMovimento.MROQUEQ)))
             {
                 s = BlackMagic.bbToString(bbFrom) + BlackMagic.bbToString(bbTo);
                 if (tipo > tipoMovimento.MPROMOCAP)
                 {
-                    peca = (tipoPeca)((int)tipo - (int)tipoMovimento.MPROMOCAP);
+                    pecaPromo = (tipoPeca)((int)tipo - (int)tipoMovimento.MPROMOCAP);
                 }
                 else if (tipo > tipoMovimento.MPROMO)
                 {
-                    peca = (tipoPeca)((int)tipo - (int)tipoMovimento.MPROMO);
+                    pecaPromo = (tipoPeca)((int)tipo - (int)tipoMovimento.MPROMO);
                 }
-                if (peca != tipoPeca.NENHUMA)
+                if (pecaPromo != tipoPeca.NENHUMA)
                 {
-                    s = s + bbConstants.sPecas[(int)peca];
+                    s = s + bbConstants.sPecas[(int)pecaPromo];
                 }
             }
             else

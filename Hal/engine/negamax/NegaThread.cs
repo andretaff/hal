@@ -45,7 +45,7 @@ namespace Hal.engine.negamax
             negaResult result;
             this.nodes = 0;
             this.hits = 0;
-            nota = Nega(-99999999, +99999999, maxPly);
+            nota = Nega(-99999999, +99999999, maxPly, true);
             result.nota = nota;
             result.move = this.move;
             result.nodes = this.nodes;
@@ -58,7 +58,7 @@ namespace Hal.engine.negamax
         }
 
 
-        private int Nega(int alfa, int beta, int ply)
+        private int Nega(int alfa, int beta, int ply, bool first)
         {
             int alfaOriginal = alfa;
             int valor;
@@ -67,6 +67,7 @@ namespace Hal.engine.negamax
             List<Move> moves;
             melhorMov.peca = tipoPeca.NENHUMA;
             bool check;
+            ulong chaveLocal = tabuleiro.getChave();
 
             unsafe
             {
@@ -77,11 +78,11 @@ namespace Hal.engine.negamax
             }
 
             this.nodes++;
-            Tuple<bool,TranspItem> retorno = tabela.recuperar(tabuleiro.getChave(), ply, age);
+            Tuple<bool,TranspItem> retorno = tabela.recuperar(chaveLocal, ply, age);
             if (retorno.Item1)
             {
                 this.hits++;
-                if (this.maxPly == ply)
+                if (first)
                     melhorMov = retorno.Item2.move;
                 if (retorno.Item2.tipo == tipoTranspItem.SCORE_EXATO)
                 {
@@ -115,6 +116,11 @@ namespace Hal.engine.negamax
             }
 
             moves = tabuleiro.gerarMovimentos();
+                       // if (chaveLocal == 10541650143722217845)
+                       // {
+                       //     tabuleiro.print();
+               // chaveLocal = tabuleiro.getChave();
+            //}
 
 
             foreach (Move move in moves)
@@ -129,6 +135,7 @@ namespace Hal.engine.negamax
                 //if (ply == this.maxPly)
                 //    tabuleiro.print();
                 // move.print();
+               //move.print(ply,10);
                 this.tabuleiro.makeMove(move);
                 //tabuleiro.print();
                 if (!tabuleiro.isValido())
@@ -137,7 +144,7 @@ namespace Hal.engine.negamax
                 }
                 else
                 {
-                    valor = -Nega(-beta, -alfa, ply - 1);
+                    valor = -Nega(-beta, -alfa, ply - 1,false);
                     if (valor > melhorValor)
                     {
                         melhorMov = move;
@@ -148,9 +155,19 @@ namespace Hal.engine.negamax
                     if (alfa > beta)
                     {
                         tabuleiro.unmakeMove(move);
+                     //   if (chaveLocal != tabuleiro.getChave())
+                     //   {
+                     //       move.print();
+                     //       tabuleiro.print();
+                     //   }
                         break;
                     }
                     tabuleiro.unmakeMove(move);
+                   // if (chaveLocal != tabuleiro.getChave())
+                   // {
+                   //     tabuleiro.print();
+                   //     move.print();
+                   // }
                 }
             }
 
@@ -166,7 +183,7 @@ namespace Hal.engine.negamax
                 }
             }
 
-            if (this.maxPly == ply)
+            if (first)
             {
                 unsafe
                 {
@@ -180,7 +197,7 @@ namespace Hal.engine.negamax
             itemT.move = melhorMov;
             itemT.idade = age;
             itemT.score = alfa;
-            itemT.chave = tabuleiro.getChave();
+            itemT.chave = chaveLocal;
             itemT.ply = ply;
 
             if (alfa <= alfaOriginal)

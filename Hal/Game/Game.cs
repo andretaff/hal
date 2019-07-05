@@ -62,7 +62,8 @@ namespace Hal.game
         public void makeHumanMoves(string moves)
         {
             string move;
-            
+            int i;
+            Move movimento;
             int pos;
             bool achou;
             List<Move> movel;
@@ -77,8 +78,9 @@ namespace Hal.game
 
                 movel = this.tabuleiro.gerarMovimentos();
                 achou = false;
-                foreach (Move movimento in movel)
+                for (i = 0; i<movel.Count; i++)
                 {
+                    movimento = movel[i];
                     if (movimento.toAlgebra().ToUpper() == move.ToUpper())
                     {
                         tabuleiro.makeMove(movimento);
@@ -88,9 +90,11 @@ namespace Hal.game
                 }
                 if (!achou)
                     throw new Exception("movimento errado");
+                    
 
 
             }
+            //tabuleiro.print();
         }
 
         public void stop()

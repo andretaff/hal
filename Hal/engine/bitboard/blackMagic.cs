@@ -199,7 +199,7 @@ namespace Hal.engine.bitboard
 
         public ulong getBBIndex(int indice)
         {
-            return (ulong) Math.Pow(2, indice);
+            return (ulong) 1<<indice;
         }
 
         public static string bbToString(ulong bb)

@@ -33,7 +33,7 @@ namespace Hal.engine.negamax
 
         public Move go (Board tabuleiro, Thread ttemporizador, TimeControl temporizador)
         {
-            int numberOfThreads = 4;
+            int numberOfThreads = 1;
             age++;
             NegaThread.negaResult resultadoTemp, resultado;
             ThreadQueue<NegaThread.negaResult> results = new ThreadQueue<NegaThread.negaResult>();
@@ -84,12 +84,12 @@ namespace Hal.engine.negamax
                 {
                     resultado = resultadoTemp;
                     uci.enviarComandoParaConsole("info " +
-                                                 "score cp " + Convert.ToString(resultado.nota) + " " +
                                                  "depth " + Convert.ToString(profundidade) + " " +
+                                                 "score cp " + Convert.ToString(resultado.nota) + " " +
                                                  "nodes " + Convert.ToString(resultado.nodes) + " " +
                                                  "time " + Convert.ToString(temporizador.ellapsedTime()) + " " +
-                                                 "tbhits "+ Convert.ToString(resultado.hits) + " "+
-                                                 "currmove " + resultado.move.toAlgebra());
+//                                                 "tbhits "+ Convert.ToString(resultado.hits) + " "+
+                                                 "pv " + resultado.move.toAlgebra());
                         
                 }
                 if (resultado.nota>9990)
@@ -97,6 +97,7 @@ namespace Hal.engine.negamax
                     break;
                 }
              }
+            //resultado.move.print();
             return resultado.move;
 
         }

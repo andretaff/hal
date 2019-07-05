@@ -115,9 +115,12 @@ namespace Hal.userInterface
             }
             else
             {
-                string fenstr = comando.Substring(8, movePos);
+                if (movePos < 0)
+                    movePos = comando.Length - 9;
+                string fenstr = comando.Substring(9, movePos);
 
                 game.setFenPosition(fenstr);
+                movePos = comando.IndexOf("moves") - 1;
             } 
             if (movePos < 0)
             {

@@ -177,8 +177,11 @@ namespace Hal.engine.board
 
         public void removePeca(ulong posicao, tipoPeca peca, int index)
         {
-            if (peca == tipoPeca.NENHUMA)
-                return;
+//            if (peca == tipoPeca.NENHUMA)
+ //               return;
+
+//            if (this.getPecaPosicao(posicao, (int)peca % 2) != peca)
+//                return;
             int cor = (int)peca % 2;
             this.bbs[(int)peca] ^= posicao;
             this.bbs[cor + bbConstants.PECAS] &= ~posicao;
@@ -190,7 +193,7 @@ namespace Hal.engine.board
         {
             ulong posicao = 1;
             int index = 0;
-            string linha="";
+            string linha = "";
             Console.Out.WriteLine(linha);
             Console.Out.WriteLine(linha);
             do
@@ -205,7 +208,7 @@ namespace Hal.engine.board
                 if (i == bbConstants.PECAS)
                     linha += " ";
 
-                if ((index+1) % 8 == 0)
+                if ((index + 1) % 8 == 0)
                 {
                     Console.Out.WriteLine(linha);
                     linha = "";
@@ -217,6 +220,10 @@ namespace Hal.engine.board
                 Console.Out.WriteLine("Branco para mover");
             else
                 Console.Out.WriteLine("Preto para mover");
+
+            Console.Out.WriteLine("EnPass " + enPassant.ToString());
+            Console.Out.WriteLine("Roque  " + this.potencialRoque.ToString());
+
         }
 
         public void addPecaHumana(tipoPeca peca, int index)
@@ -281,23 +288,25 @@ namespace Hal.engine.board
             move.enPassant = this.enPassant;
             move.potencialRoque = this.potencialRoque;
 
+            this.enPassant = -1;
+
             if ((potencialRoque & (bbConstants.ROQUE_REI_BRANCO | bbConstants.ROQUE_RAINHA_BRANCO))!=0)
             {
                 if (move.peca == tipoPeca.REI)
-                    move.potencialRoque &= (bbConstants.ROQUE_REI_PRETO | bbConstants.ROQUE_RAINHA_PRETO);
+                    this.potencialRoque &= (bbConstants.ROQUE_REI_PRETO | bbConstants.ROQUE_RAINHA_PRETO);
                 if (((move.bbFrom | move.bbTo) & bbConstants.I56) != 0)
-                    move.potencialRoque &= ~bbConstants.ROQUE_RAINHA_BRANCO;
+                    this.potencialRoque &= ~bbConstants.ROQUE_RAINHA_BRANCO;
                 if (((move.bbFrom | move.bbTo) & bbConstants.I63) != 0)
-                    move.potencialRoque &= ~bbConstants.ROQUE_REI_BRANCO;
+                    this.potencialRoque &= ~bbConstants.ROQUE_REI_BRANCO;
             }
             if  ((potencialRoque & (bbConstants.ROQUE_REI_PRETO | bbConstants.ROQUE_RAINHA_PRETO)) != 0)
             {
                 if (move.peca == tipoPeca.RP)
-                    move.potencialRoque &= (bbConstants.ROQUE_REI_BRANCO | bbConstants.ROQUE_RAINHA_BRANCO);
+                    this.potencialRoque &= (bbConstants.ROQUE_REI_BRANCO | bbConstants.ROQUE_RAINHA_BRANCO);
                 if (((move.bbFrom | move.bbTo) & bbConstants.I00) != 0)
-                    move.potencialRoque &= ~bbConstants.ROQUE_RAINHA_PRETO;
+                    this.potencialRoque &= ~bbConstants.ROQUE_RAINHA_PRETO;
                 if (((move.bbFrom | move.bbTo) & bbConstants.I07) != 0)
-                    move.potencialRoque &= ~bbConstants.ROQUE_REI_PRETO;
+                    this.potencialRoque &= ~bbConstants.ROQUE_REI_PRETO;
             }
 
 
@@ -312,12 +321,30 @@ namespace Hal.engine.board
                     {
                         this.removePeca(move.bbFrom, move.peca, move.indiceDe);
                         this.addPeca(move.bbTo, move.peca, move.indicePara);
+                        if (this.corMover == 0)
+                            this.enPassant = move.indiceDe - 8;
+                        else
+                            this.enPassant = move.indiceDe + 8;
                     } break;
                 case tipoMovimento.MCAP:
                     {
+                        //if (move.pecaCap == tipoPeca.NENHUMA)
+                        //{
+                        //    this.print();
+                        //    move.print();
+                        //}
                         this.removePeca(move.bbFrom, move.peca, move.indiceDe);
                         this.removePeca(move.bbTo, move.pecaCap, move.indicePara);
                         this.addPeca(move.bbTo, move.peca, move.indicePara);
+                    } break;
+                case tipoMovimento.MCAPENPASSANT:
+                    {
+                        this.removePeca(move.bbFrom, move.peca, move.indiceDe);
+                        this.addPeca(move.bbTo, move.peca, move.indicePara);
+                        if (corMover == 0)
+                            this.removePeca(move.bbTo<<8, move.pecaCap, move.indicePara+8);
+                        else
+                            this.removePeca(move.bbTo>>8, move.pecaCap, move.indicePara - 8);
                     } break;
 
                 case tipoMovimento.MROQUEK:
@@ -378,7 +405,6 @@ namespace Hal.engine.board
 
             }
             this.corMover = 1 - corMover;
-
         }
 
         public void unmakeMove(Move move)
@@ -403,6 +429,21 @@ namespace Hal.engine.board
                         this.removePeca(move.bbTo, move.peca, move.indicePara);
                     }
                     break;
+                case tipoMovimento.MCAPENPASSANT:
+                    {
+                        this.addPeca(move.bbFrom, move.peca, move.indiceDe);
+                        this.removePeca(move.bbTo, move.peca, move.indicePara);
+                        if ((int)move.peca%2 == 0)
+                          this.addPeca(move.bbTo<<8, move.pecaCap, move.indicePara + 8); 
+                        else
+                         this.addPeca(move.bbTo>>8, move.pecaCap, move.indicePara - 8);
+
+
+
+                    }
+                    break;
+
+
                 case tipoMovimento.MROQUEK:
                     {
                         int cor = (int)move.peca % 2;
@@ -846,6 +887,9 @@ namespace Hal.engine.board
                 int iFrom, iTo;
                 int j;
 
+                if (this.enPassant > -1)
+                    inimigas |= bm.getBBIndex(this.enPassant);
+
                 while (peoes != 0) 
                 {
                     pFrom = (ulong)((long)peoes & -(long)peoes);
@@ -881,12 +925,25 @@ namespace Hal.engine.board
                     {
                         pTo = (ulong)((long)ataques & -(long)ataques);
                         iTo = bm.index(pTo);
-                        pAtacada = this.getPecaPosicao(pTo, (byte)1 - corMover);
-                        move = new Move(pFrom, pTo, tipoMovimento.MCAP,
-                            (tipoPeca)((int)tipoPeca.PEAO + corMover),
-                            pAtacada,
-                            iFrom,
-                            iTo);
+                        if (iTo == this.enPassant)
+                        {
+                            move = new Move(pFrom, pTo, tipoMovimento.MCAPENPASSANT,
+                                (tipoPeca)((int)tipoPeca.PEAO + corMover),
+                                (tipoPeca)((int)tipoPeca.PEAO + 1 - corMover),
+                                iFrom,
+                                iTo);
+                        }
+                        else
+                        {
+                            pAtacada = this.getPecaPosicao(pTo, (byte)1 - corMover);
+                           // if (pAtacada == tipoPeca.NENHUMA)
+                           //     this.print();
+                            move = new Move(pFrom, pTo, tipoMovimento.MCAP,
+                                (tipoPeca)((int)tipoPeca.PEAO + corMover),
+                                pAtacada,
+                                iFrom,
+                                iTo);
+                        }
                         moves.Add(move);
                         ataques = ataques & (ataques - 1);
                     }
