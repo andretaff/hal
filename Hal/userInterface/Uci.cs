@@ -36,6 +36,11 @@ namespace Hal.userInterface
                     {
                         this.cUci();
                     }
+
+                    if (comando =="clearhash")
+                    {
+                        game.ClearHash();
+                    }
                     if (comando =="test")
                     {
                         Matein2 matein2 = new Matein2(this,game);
@@ -61,13 +66,18 @@ namespace Hal.userInterface
 
                     if (comando == "stop")
                     {
-                        game.stop();
+                        game.Stop();
+                    }
+
+                    if (comando == "print")
+                    {
+                        game.Print();
                     }
 
 
                     if (comando == "quit")
                     {
-                        game.stop();
+                        game.Stop();
                         break;
                     }
                 }

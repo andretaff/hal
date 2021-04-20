@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Hal.engine.bitboard;
-using Hal.engine.board;
+﻿using Hal.engine.bitboard;
 using Hal.game;
 using Hal.userInterface;
+using System;
+using System.Threading;
 
 namespace Hal.engine.tests
 {
@@ -37,11 +33,20 @@ namespace Hal.engine.tests
                 else if (estagio == 1)
                 {
                     linha = linha.Replace("x", "");
+                    Thread.Sleep(1000);
                     string pecaMov = ""+linha[0];
                     string casas = linha.Substring(1);
+
+                  
+
+
                     uci.enviarComandoParaConsole(linha);
                     game.start(tipoTempo.infinito, 0);
                     game.run();
+                    string movEngine = game.BestMove.toAlgebra();
+                    uci.enviarComandoParaConsole("mov engine: " + movEngine);
+                    Thread.Sleep(1000);
+
                     this.Assert((bbConstants.sPecas[(int)game.BestMove.peca].ToString().ToUpper() == pecaMov) &&
                         (BlackMagic.getBBFromAlg(casas) == game.BestMove.bbTo), "mov errado");
                     estagio = 0;

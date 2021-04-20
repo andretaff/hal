@@ -22,8 +22,28 @@ namespace Hal.engine.move
         MPROMOCAPN = 51,
         MPROMOCAPB = 52,
         MPROMOCAPR = 53,
-        MPROMOCAPQ = 54
+        MPROMOCAPQ = 54,
+        MOVNENHUM = 100
     } 
+
+    class MoveComparer : IComparer<Move>
+    {
+        public int Compare(Move x, Move y)
+        {
+
+            if (x == null || y == null)
+                return 0;
+
+            if (x.score > y.score)
+                return -1;
+            else if (x.score == y.score)
+                return 0;
+            else
+                return 1;
+
+        }
+    }
+
 
     class Move
     {
@@ -36,6 +56,7 @@ namespace Hal.engine.move
         public int indicePara;
         public uint potencialRoque;
         public int  enPassant;
+        public int score;
 
         public Move(ulong bbFrom, ulong bbTo, tipoMovimento tipo, tipoPeca peca, tipoPeca pecaCap, int indiceDe, int indicePara )
         {
@@ -48,12 +69,14 @@ namespace Hal.engine.move
             this.tipo = tipo;
             this.enPassant = -1;
             this.potencialRoque = 0;
+            this.score = 0;
         }
 
         public Move()
         {
             this.enPassant = -1;
             this.potencialRoque = 0;
+            this.tipo = tipoMovimento.MOVNENHUM;
         }
 
         public Move(Move copiar)
@@ -66,11 +89,14 @@ namespace Hal.engine.move
             this.indicePara = copiar.indicePara;
             this.tipo = copiar.tipo;
             this.enPassant = copiar.enPassant;
-            this.potencialRoque = copiar.potencialRoque;        }
+            this.potencialRoque = copiar.potencialRoque;
+            this.score = copiar.score;
+        }
+
 
         public void print(int ply = 0, int maxply = 0)
         {
-            string saida = new string(' ', 5*(maxply-ply))+ bbConstants.sPecas[(int)this.peca]+ this.toAlgebra();
+            string saida = new string(' ', 5*(maxply-ply))+ bbConstants.sPecas[(int)this.peca]+ this.toAlgebra()+" "+score.ToString();
             Console.Out.WriteLine(saida);
         }
 
@@ -99,22 +125,22 @@ namespace Hal.engine.move
                 if (tipo == tipoMovimento.MROQUEK){
                     if ((int) peca % 2 == 0 )
                     {
-                        s = "e1h1";
+                        s = "e1g1";
                     }
                     else
                     {
-                        s = "e8h8";
+                        s = "e8g8";
                     }
                 }
                 else
                 {
                     if ((int)peca % 2 == 0)
                     {
-                        s = "e1a1";
+                        s = "e1c1";
                     }
                     else
                     {
-                        s = "e8a8";
+                        s = "e8c8";
                     }
                 }
             }

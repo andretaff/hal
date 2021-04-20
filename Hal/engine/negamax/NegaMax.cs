@@ -33,7 +33,11 @@ namespace Hal.engine.negamax
 
         public Move go (Board tabuleiro, Thread ttemporizador, TimeControl temporizador)
         {
+#if DEBUG
             int numberOfThreads = 1;
+#else
+            int numberOfThreads = 1;
+#endif
             age++;
             NegaThread.negaResult resultadoTemp, resultado;
             ThreadQueue<NegaThread.negaResult> results = new ThreadQueue<NegaThread.negaResult>();
@@ -59,7 +63,7 @@ namespace Hal.engine.negamax
                 {
                     unsafe
                     {
-                        negathread[i] = new NegaThread(tabuleiro, profundidade, avaliador, ttemporizador, &bParar, results, tabela,age);
+                        negathread[i] = new NegaThread(i,tabuleiro, profundidade, avaliador, ttemporizador, &bParar, results, tabela,age);
                     }
 
                     thread = new Thread(new ThreadStart(negathread[i].Run));
@@ -77,20 +81,23 @@ namespace Hal.engine.negamax
                         for (i = 0; i < numberOfThreads; i++)
                             threads[i].Abort();
                         Thread.Sleep(1);
+                        tabela.reiniciarMovsBuscados();
                     }
                 }
 
                 if ((ttemporizador.IsAlive))
                 {
                     resultado = resultadoTemp;
+                    tabuleiro.makeMove(resultado.move);
+                  
                     uci.enviarComandoParaConsole("info " +
                                                  "depth " + Convert.ToString(profundidade) + " " +
                                                  "score cp " + Convert.ToString(resultado.nota) + " " +
                                                  "nodes " + Convert.ToString(resultado.nodes) + " " +
                                                  "time " + Convert.ToString(temporizador.ellapsedTime()) + " " +
 //                                                 "tbhits "+ Convert.ToString(resultado.hits) + " "+
-                                                 "pv " + resultado.move.toAlgebra());
-                        
+                                                 "pv " + resultado.move.toAlgebra()+" "+this.printPV(tabuleiro));
+                    tabuleiro.unmakeMove(resultado.move);     
                 }
                 if (resultado.nota>9990)
                 {
@@ -100,6 +107,24 @@ namespace Hal.engine.negamax
             //resultado.move.print();
             return resultado.move;
 
+        }
+
+        private string printPV(Board tabuleiro)
+        {
+            string saida = "";
+            Move move;
+            Tuple<bool, TranspItem> resultado;
+
+            resultado = tabela.recuperar(tabuleiro.getChave(), 0, age);
+            if ((resultado.Item2 != null) && (resultado.Item2.move != null) && (resultado.Item2.move.tipo != tipoMovimento.MOVNENHUM))
+            {
+                saida = resultado.Item2.move.toAlgebra();
+                tabuleiro.makeMove(resultado.Item2.move);
+                saida += " " +this.printPV(tabuleiro);
+                tabuleiro.unmakeMove(resultado.Item2.move);
+            }
+            return saida;
+ 
         }
     }
 }

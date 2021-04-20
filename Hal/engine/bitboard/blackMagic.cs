@@ -199,7 +199,16 @@ namespace Hal.engine.bitboard
 
         public ulong getBBIndex(int indice)
         {
+            if (indice == 10)
+                indice = 10;
             return (ulong) 1<<indice;
+        }
+
+        public static int popCount(ulong i)
+        {
+            i = i - ((i >> 1) & 0x5555555555555555UL);
+            i = (i & 0x3333333333333333UL) + ((i >> 2) & 0x3333333333333333UL);
+            return (int)(unchecked(((i + (i >> 4)) & 0xF0F0F0F0F0F0F0FUL) * 0x101010101010101UL) >> 56);
         }
 
         public static string bbToString(ulong bb)
@@ -337,7 +346,7 @@ namespace Hal.engine.bitboard
             }
         }
 
-        public int index(ulong bitboard)
+        public static int index(ulong bitboard)
         {
             uint fold;
 
@@ -372,7 +381,7 @@ namespace Hal.engine.bitboard
 
             mascaraAtual = 0;
         }
-        private readonly int[] lsb_64_table = { 63, 30, 3, 32, 59, 14, 11, 33, 60, 24, 50, 9, 55, 19, 21, 34, 61, 29, 2, 53, 51, 23, 41, 18, 56, 28, 1, 43, 46, 27, 0, 35, 62, 31, 58, 4, 5, 49, 54, 6, 15, 52, 12, 40, 7, 42, 45, 16, 25, 57, 48, 13, 10, 39, 8, 44, 20, 47, 38, 22, 17, 37, 36, 26 };
+        private static readonly int[] lsb_64_table = { 63, 30, 3, 32, 59, 14, 11, 33, 60, 24, 50, 9, 55, 19, 21, 34, 61, 29, 2, 53, 51, 23, 41, 18, 56, 28, 1, 43, 46, 27, 0, 35, 62, 31, 58, 4, 5, 49, 54, 6, 15, 52, 12, 40, 7, 42, 45, 16, 25, 57, 48, 13, 10, 39, 8, 44, 20, 47, 38, 22, 17, 37, 36, 26 };
         
         public magic[] bispo =          {   new magic      { fator = 0x107ac08050500bff, posicao = 66157 },
                                             new magic      { fator = 0x7fffdfdfd823fffd, posicao = 71730 },

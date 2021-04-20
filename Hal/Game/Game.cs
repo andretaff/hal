@@ -38,6 +38,7 @@ namespace Hal.game
         {
             bestMove = negamax.go(tabuleiro,tTemporizador,temporizador);
             uci.enviarComandoParaConsole("bestmove " + bestMove.toAlgebra());
+            //tabela.Clear();
         }
 
         public void newGame()
@@ -45,9 +46,15 @@ namespace Hal.game
             this.tabuleiro = Fen.tabuleiroPadrao(bm,tabela);
         }
 
+
+        public void Print()
+        {
+            this.tabuleiro.print();
+        }
         public void setFenPosition(string fenString)
         {
             this.tabuleiro = Fen.lerFen(bm, tabela, fenString);
+            //this.tabuleiro.print();
         }
 
         public void start(tipoTempo tipo, ulong miliSecs )
@@ -75,18 +82,24 @@ namespace Hal.game
 
                 move = moves.Substring(0, pos);
                 moves = moves.Substring(move.Length, moves.Length- move.Length).Trim();
+                movel = new List<Move>();
 
-                movel = this.tabuleiro.gerarMovimentos();
+                movel = this.tabuleiro.gerarMovimentos(movel,false);
                 achou = false;
                 for (i = 0; i<movel.Count; i++)
                 {
                     movimento = movel[i];
+                    //Console.Out.WriteLine(" Testando "+move);
+                    //tabuleiro.print();
                     if (movimento.toAlgebra().ToUpper() == move.ToUpper())
                     {
                         tabuleiro.makeMove(movimento);
                         achou = true;
+                        //Console.Out.WriteLine(" ---------------------------- ");
                         break;
                     }
+                    //else
+                   //     movimento.print();
                 }
                 if (!achou)
                     throw new Exception("movimento errado");
@@ -97,9 +110,14 @@ namespace Hal.game
             //tabuleiro.print();
         }
 
-        public void stop()
+        public void Stop()
         {
             temporizador.parar();
+        }
+
+        public void ClearHash()
+        {
+            this.tabela.Clear();
         }
     }
 }

@@ -19,11 +19,14 @@ namespace Hal.engine.board
         public int ply;
         public Move move;
         
+        
         public TranspItem()
         {
             this.idade = 0;
             this.tipo = tipoTranspItem.SCORE_NENHUM;
+            this.move = null;
         }
+
 
         public TranspItem clone()
         {
@@ -46,6 +49,32 @@ namespace Hal.engine.board
         public ulong chaveBTM;
         private uint size;
         private TranspItem[] tabela;
+        private List<movBusc>[] movsBuscados;
+        private static object lockMove = new object();
+        struct movBusc
+        {
+            public ulong moveHash;
+            public ulong hash;
+        }
+
+        public ulong moveHash(Move move)
+        {
+            if ((int) move.peca < bbConstants.PECAS)
+                return this.chaves[(int)move.peca, move.indiceDe] ^ this.chaves[(int)move.peca, move.indicePara];
+            else
+                return 1;
+
+          
+        }
+
+        public void Clear()
+        {
+            for (int i = 0; i < this.size; i++)
+                if (this.tabela[i]!= null)
+                    this.tabela[i].chave = 0;
+        }
+        
+
 
         public TranspTable(uint size)
         {
@@ -57,6 +86,78 @@ namespace Hal.engine.board
             for (int i = 0; i < (size / 1000)+1; i++)
                 objLock[i] = new object();
             read();
+
+            movsBuscados = new List<movBusc>[bbConstants.MAXPLY];
+
+            for (int i = 0; i < 4; i++)
+            {
+                lock (lockMove)
+                {
+                    movsBuscados[i] = new List<movBusc>();
+                    for (int j = 0; j < bbConstants.MAXPLY; j++)
+                    {
+                        movBusc movB = new movBusc();
+                        movB.hash = 0;
+                        movsBuscados[i].Add(movB);
+                    }
+                }
+            }
+                    
+
+        }
+
+        public void reiniciarMovsBuscados()
+        {
+            movsBuscados = new List<movBusc>[bbConstants.MAXPLY];
+
+            for (int i = 0; i < 4; i++)
+            {
+               // lock (lockMove)
+                {
+                    movsBuscados[i] = new List<movBusc>();
+                    for (int j = 0; j < bbConstants.MAXPLY; j++)
+                    {
+                        movBusc movB = new movBusc();
+                        movB.hash = 0;
+                        movsBuscados[i].Add(movB);
+                    }
+                }
+            }
+        }
+
+        public Boolean verificaSeBuscado(int id, ulong hash, ulong moveHash, int ply)
+        {
+            for (int i = 0; i < 4; i++)
+                if (i != id)
+                {
+             //       lock (lockMove)
+             //       {
+                        if ((movsBuscados[i][ply].hash == 0))
+                            break;
+                        if ((movsBuscados[i][ply].hash == hash) && (movsBuscados[i][ply].moveHash == moveHash))
+                        {
+                            return false;
+                        }
+             //       }
+                }
+            movBusc moveB;
+            moveB = new movBusc();
+            moveB.hash = hash;
+            moveB.moveHash = moveHash;
+            //lock (lockMove)
+           // {
+                movsBuscados[id][ply] = moveB;
+            //}
+
+            return true;
+        }
+
+        public void retiraMov(int id, int ply)
+        {
+            movBusc moveB;
+            moveB = new movBusc();
+            moveB.hash = 0;
+            movsBuscados[id][ply] = moveB;
         }
 
         public void armazenar(TranspItem item)
@@ -75,6 +176,7 @@ namespace Hal.engine.board
             uint pos = (uint)(chave % (ulong)size);
             uint posLock = pos % 1000;
             bool ok = false;
+            item = null;
             lock (objLock[posLock])
             {
                 item = tabela[pos];
@@ -84,11 +186,18 @@ namespace Hal.engine.board
                 }
                 if ((chave == item.chave) &&
                         (ply <= item.ply) &&
-                        (idade == item.idade))
+                        (idade <= item.idade + 1))
                 {
                     item = item.clone();
                     ok = true;
                 }
+                else if (chave == item.chave)
+                {
+                    ok = false;
+                    item = item.clone();
+                }
+                else
+                    item = null;
             }
             return new Tuple<bool, TranspItem>(ok, item);
         }
