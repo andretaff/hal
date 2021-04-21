@@ -53,6 +53,7 @@ namespace Hal.userInterface
                         
 
                     }
+
                     if (comando == "ucinewgame")
                         this.cUcinewGame();
 
@@ -72,6 +73,11 @@ namespace Hal.userInterface
                     if (comando == "print")
                     {
                         game.Print();
+                    }
+
+                    if (comando == "eval")
+                    {
+                        game.eval();
                     }
 
 

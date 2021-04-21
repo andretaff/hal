@@ -33,28 +33,28 @@ namespace Hal.engine.tests
                 else if (estagio == 1)
                 {
                     linha = linha.Replace("x", "");
-                    Thread.Sleep(1000);
+                    Thread.Sleep(300);
                     string pecaMov = ""+linha[0];
                     string casas = linha.Substring(1);
 
                   
 
 
-                    uci.enviarComandoParaConsole(linha);
+                    //uci.enviarComandoParaConsole(linha);
                     game.start(tipoTempo.infinito, 0);
                     game.run();
                     string movEngine = game.BestMove.toAlgebra();
-                    uci.enviarComandoParaConsole("mov engine: " + movEngine);
-                    Thread.Sleep(1000);
+                    //uci.enviarComandoParaConsole("mov engine: " + movEngine);
+                    Thread.Sleep(300);
 
                     this.Assert((bbConstants.sPecas[(int)game.BestMove.peca].ToString().ToUpper() == pecaMov) &&
                         (BlackMagic.getBBFromAlg(casas) == game.BestMove.bbTo), "mov errado");
                     estagio = 0;
-                    uci.enviarComandoParaConsole("ok");
+                    //uci.enviarComandoParaConsole("ok");
                 }
                 else
                 {
-                    uci.enviarComandoParaConsole(linha);
+                    //uci.enviarComandoParaConsole(linha);
                 }
             }
             file.Close();

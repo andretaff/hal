@@ -820,8 +820,7 @@ namespace Hal.engine.board
                         if (((todas & (bbConstants.I62 | bbConstants.I61)) == 0)
                             && (!casaAtacada(bbConstants.I60, 1))
                             && (!casaAtacada(bbConstants.I61, 1))
-                            && (!casaAtacada(bbConstants.I62, 1))
-                            && (!casaAtacada(bbConstants.I63, 1)))
+                            && (!casaAtacada(bbConstants.I62, 1)))
                         {
                             move = new Move(reis, bbConstants.I63,
                                 tipoMovimento.MROQUEK,
@@ -836,8 +835,7 @@ namespace Hal.engine.board
                             && (!casaAtacada(bbConstants.I56, 1))
                             && (!casaAtacada(bbConstants.I57, 1))
                             && (!casaAtacada(bbConstants.I58, 1))
-                            && (!casaAtacada(bbConstants.I59, 1))
-                            && (!casaAtacada(bbConstants.I60, 1)))
+                            && (!casaAtacada(bbConstants.I59, 1)))
                         {
                             move = new Move(reis, bbConstants.I56,
                                 tipoMovimento.MROQUEQ,
@@ -855,8 +853,7 @@ namespace Hal.engine.board
                         if (((todas & (bbConstants.I05 | bbConstants.I06)) == 0)
                             && (!casaAtacada(bbConstants.I04, 0))
                             && (!casaAtacada(bbConstants.I05, 0))
-                            && (!casaAtacada(bbConstants.I06, 0))
-                            && (!casaAtacada(bbConstants.I07, 0)))
+                            && (!casaAtacada(bbConstants.I06, 0)))
                         {
                             move = new Move(reis, bbConstants.I07,
                                 tipoMovimento.MROQUEK,
@@ -871,8 +868,7 @@ namespace Hal.engine.board
                             && (!casaAtacada(bbConstants.I00, 0))
                             && (!casaAtacada(bbConstants.I01, 0))
                             && (!casaAtacada(bbConstants.I02, 0))
-                            && (!casaAtacada(bbConstants.I03, 0))
-                            && (!casaAtacada(bbConstants.I04, 0)))
+                            && (!casaAtacada(bbConstants.I03, 0)))
                         {
                             move = new Move(reis, bbConstants.I56,
                                 tipoMovimento.MROQUEQ,

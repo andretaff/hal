@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hal.engine.negamax;
 using Hal.engine.move;
+using Hal.engine.avaliacao;
 
 namespace Hal.game
 {
@@ -43,7 +44,16 @@ namespace Hal.game
 
         public void newGame()
         {
-            this.tabuleiro = Fen.tabuleiroPadrao(bm,tabela);
+            this.tabuleiro = Fen.tabuleiroPadrao(bm, tabela);
+            this.ClearHash();
+
+        }
+
+        public void eval()
+        {
+            Avaliador avaliador = new Avaliador();
+            int eval = avaliador.avaliar(this.tabuleiro);
+            Console.Out.WriteLine("Aval: " + eval.ToString());
         }
 
 
@@ -86,6 +96,7 @@ namespace Hal.game
 
                 movel = this.tabuleiro.gerarMovimentos(movel,false);
                 achou = false;
+                //tabuleiro.print();
                 for (i = 0; i<movel.Count; i++)
                 {
                     movimento = movel[i];

@@ -213,42 +213,42 @@ namespace Hal.engine.bitboard
 
         public static string bbToString(ulong bb)
         {
-            string s = "";
+            StringBuilder s = new StringBuilder();
             if ((bb & bbConstants.C1) != 0)
-                s = s + "a";
+                s.Append("a");
             else if ((bb & bbConstants.C2) != 0)
-                s = s + "b";
+                s.Append("b");
             else if ((bb & bbConstants.C3) != 0)
-                s = s + "c";
+                s.Append("c");
             else if ((bb & bbConstants.C4) != 0)
-                s = s + "d";
+                s.Append("d");
             else if ((bb & bbConstants.C5) != 0)
-                s = s + "e";
+                s.Append("e");
             else if ((bb & bbConstants.C6) != 0)
-                s = s + "f";
+                s.Append("f");
             else if ((bb & bbConstants.C7) != 0)
-                s = s + "g";
+                s.Append("g");
             else if ((bb & bbConstants.C8) != 0)
-                s = s + "h";
+                s.Append("h");
 
             if ((bb & bbConstants.R1) != 0)
-                s += "8";
+                s.Append("8");
             else if ((bb & bbConstants.R2) != 0)
-                s += "7";
+                s.Append("7");
             else if ((bb & bbConstants.R3) != 0)
-                s += "6";
+                s.Append("6");
             else if ((bb & bbConstants.R4) != 0)
-                s += "5";
+                s.Append("5");
             else if ((bb & bbConstants.R5) != 0)
-                s += "4";
+                s.Append("4");
             else if ((bb & bbConstants.R6) != 0)
-                s += "3";
+                s.Append("3");
             else if ((bb & bbConstants.R7) != 0)
-                s += "2";
+                s.Append("2");
             else if ((bb & bbConstants.R8) != 0)
-                s += "1";
+                s.Append("1");
 
-            return s;
+            return s.ToString();
         }
 
         public static ulong getBBFromAlg(string alg)

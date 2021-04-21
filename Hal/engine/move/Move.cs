@@ -102,11 +102,13 @@ namespace Hal.engine.move
 
         public string toAlgebra()
         {
-            string s="";
+            StringBuilder sb = new StringBuilder();
             tipoPeca pecaPromo = tipoPeca.NENHUMA;
             if (!((tipo == tipoMovimento.MROQUEK) || (tipo == tipoMovimento.MROQUEQ)))
             {
-                s = BlackMagic.bbToString(bbFrom) + BlackMagic.bbToString(bbTo);
+
+                sb.Append(BlackMagic.bbToString(bbFrom));
+                sb.Append(BlackMagic.bbToString(bbTo));
                 if (tipo > tipoMovimento.MPROMOCAP)
                 {
                     pecaPromo = (tipoPeca)((int)tipo - (int)tipoMovimento.MPROMOCAP);
@@ -117,7 +119,7 @@ namespace Hal.engine.move
                 }
                 if (pecaPromo != tipoPeca.NENHUMA)
                 {
-                    s = s + bbConstants.sPecas[(int)pecaPromo];
+                    sb.Append(bbConstants.sPecas[(int)pecaPromo]);
                 }
             }
             else
@@ -125,26 +127,26 @@ namespace Hal.engine.move
                 if (tipo == tipoMovimento.MROQUEK){
                     if ((int) peca % 2 == 0 )
                     {
-                        s = "e1g1";
+                        sb.Append("e1g1");
                     }
                     else
                     {
-                        s = "e8g8";
+                        sb.Append("e8g8");
                     }
                 }
                 else
                 {
                     if ((int)peca % 2 == 0)
                     {
-                        s = "e1c1";
+                        sb.Append("e1c1");
                     }
                     else
                     {
-                        s = "e8c8";
+                        sb.Append("e8c8");
                     }
                 }
             }
-            return s;
+            return sb.ToString();
 
         }
     }

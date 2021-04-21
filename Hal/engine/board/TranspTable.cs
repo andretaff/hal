@@ -70,8 +70,10 @@ namespace Hal.engine.board
         public void Clear()
         {
             for (int i = 0; i < this.size; i++)
-                if (this.tabela[i]!= null)
+                if (this.tabela[i] != null)
+                {
                     this.tabela[i].chave = 0;
+                }
         }
         
 

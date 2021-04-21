@@ -45,7 +45,7 @@ namespace Hal.engine.negamax
             int i;
             List<Thread> threads = new List<Thread>();
             Thread thread;
-            int profundidade = 1;
+            int profundidade = 2;
             bool bAchou;
             bool bParar;
 
@@ -72,7 +72,7 @@ namespace Hal.engine.negamax
                 }
                 while (!bAchou)
                 {
-                    Thread.Sleep(5);
+                    Thread.Sleep(35);
                     if (!results.isEmpty())
                     {
                         bParar = true;
@@ -87,8 +87,13 @@ namespace Hal.engine.negamax
 
                 if ((ttemporizador.IsAlive))
                 {
+                    StringBuilder sb = new StringBuilder();
                     resultado = resultadoTemp;
                     tabuleiro.makeMove(resultado.move);
+                    sb.Append("pv ");
+                    sb.Append(resultado.move.toAlgebra());
+                    sb.Append(" ");
+                    sb.Append(this.printPV(tabuleiro, 8));
                   
                     uci.enviarComandoParaConsole("info " +
                                                  "depth " + Convert.ToString(profundidade) + " " +
@@ -96,7 +101,7 @@ namespace Hal.engine.negamax
                                                  "nodes " + Convert.ToString(resultado.nodes) + " " +
                                                  "time " + Convert.ToString(temporizador.ellapsedTime()) + " " +
 //                                                 "tbhits "+ Convert.ToString(resultado.hits) + " "+
-                                                 "pv " + resultado.move.toAlgebra()+" "+this.printPV(tabuleiro));
+                                                 sb.ToString());
                     tabuleiro.unmakeMove(resultado.move);     
                 }
                 if (resultado.nota>9990)
@@ -109,21 +114,24 @@ namespace Hal.engine.negamax
 
         }
 
-        private string printPV(Board tabuleiro)
+        private string printPV(Board tabuleiro, int qt )
         {
-            string saida = "";
+            StringBuilder saida = new StringBuilder();
             Move move;
             Tuple<bool, TranspItem> resultado;
-
-            resultado = tabela.recuperar(tabuleiro.getChave(), 0, age);
-            if ((resultado.Item2 != null) && (resultado.Item2.move != null) && (resultado.Item2.move.tipo != tipoMovimento.MOVNENHUM))
+            if (qt==0)
             {
-                saida = resultado.Item2.move.toAlgebra();
-                tabuleiro.makeMove(resultado.Item2.move);
-                saida += " " +this.printPV(tabuleiro);
-                tabuleiro.unmakeMove(resultado.Item2.move);
+                return "";
             }
-            return saida;
+            resultado = tabela.recuperar(tabuleiro.getChave(), 0, age);
+            if ((resultado.Item1) && (resultado.Item2 != null) && (resultado.Item2.move != null) && (resultado.Item2.move.tipo != tipoMovimento.MOVNENHUM))
+            {
+                  saida.Append(resultado.Item2.move.toAlgebra());
+                    tabuleiro.makeMove(resultado.Item2.move);
+                    saida.Append(" " + this.printPV(tabuleiro,qt-1));
+                    tabuleiro.unmakeMove(resultado.Item2.move);
+            }
+            return saida.ToString();
  
         }
     }

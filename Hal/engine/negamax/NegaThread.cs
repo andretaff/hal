@@ -51,8 +51,8 @@ namespace Hal.engine.negamax
             negaResult result;
             this.nodes = 0;
             this.hits = 0;
-            this.tabuleiro.print();
-            Thread.Sleep(300);
+            //this.tabuleiro.print();
+            //Thread.Sleep(300);
             nota = Nega(-99999999, +99999999, maxPly, 0);
             result.nota = nota;
             result.move = this.move;
